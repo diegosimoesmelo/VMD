@@ -7,6 +7,5 @@
         'submitLabel' => 'Atualizar veiculo',
         'backUrl' => route('vehicles.index'),
         'vehicle' => $vehicle,
-        'teachers' => $teachers,
     ])
 @endsection

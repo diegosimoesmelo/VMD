@@ -17,49 +17,63 @@ class AppointmentController extends Controller
 {
     public function index(Request $request): View
     {
-        $categoryFilter = $request->string('teacher_category')->toString();
-        $teachers = Teacher::query()
-            ->with('vehicles')
+        $categoryFilter = $request->string('vehicle_category')->toString();
+        $vehicles = Vehicle::query()
             ->when($categoryFilter !== '', function ($query) use ($categoryFilter) {
-                $query->whereJsonContains('categorias_ensino', $categoryFilter);
+                $query->where('categoria', $categoryFilter);
             })
-            ->orderBy('nome')
+            ->orderBy('placa')
             ->get();
 
-        $selectedTeacher = $this->resolveTeacher($request, $teachers);
+        $selectedVehicle = $this->resolveVehicle($request, $vehicles);
         $weekStart = $this->resolveWeekStart($request);
         $weekDays = collect(range(0, 5))
             ->map(fn (int $offset) => $weekStart->copy()->addDays($offset));
 
         $students = collect();
+        $teachers = collect();
         $appointmentsBySlot = collect();
+        $teacherSummary = collect();
 
-        if ($selectedTeacher) {
-            $students = Student::query()
-                ->where('status', '!=', Student::STATUS_FINISHED)
-                ->with('teacher')
-                ->orderByRaw('CASE WHEN teacher_id = ? THEN 0 WHEN teacher_id IS NULL THEN 1 ELSE 2 END', [$selectedTeacher->id])
+        if ($selectedVehicle) {
+            $teachers = Teacher::query()
+                ->whereJsonContains('categorias_ensino', $selectedVehicle->categoria)
+                ->where('status_agendamento', Teacher::STATUS_AVAILABLE)
                 ->orderBy('nome')
                 ->get();
 
+            $students = Student::query()
+                ->where('status', '!=', Student::STATUS_FINISHED)
+                ->with('teacher')
+                ->orderBy('nome')
+                ->get();
+
+            $students = $students
+                ->filter(fn (Student $student) => $student->supportsLessonCategory($selectedVehicle->categoria))
+                ->values();
+
             $appointmentsBySlot = Appointment::query()
                 ->with(['student', 'teacher', 'vehicle'])
-                ->where('teacher_id', $selectedTeacher->id)
+                ->where('vehicle_id', $selectedVehicle->id)
                 ->whereBetween('starts_at', [$weekStart->copy()->startOfDay(), $weekStart->copy()->addDays(5)->endOfDay()])
                 ->get()
                 ->keyBy(fn (Appointment $appointment) => $appointment->starts_at->format('Y-m-d H:i'));
         }
 
+        $teacherSummary = $this->teacherSummary($weekStart, $weekDays);
+
         return view('appointments.index', [
+            'vehicles' => $vehicles,
+            'selectedVehicle' => $selectedVehicle,
             'teachers' => $teachers,
-            'selectedTeacher' => $selectedTeacher,
             'students' => $students,
             'weekStart' => $weekStart,
             'weekDays' => $weekDays,
             'timeSlots' => $this->timeSlots(),
             'appointmentsBySlot' => $appointmentsBySlot,
-            'teacherCategoryFilter' => $categoryFilter,
-            'teacherCategoryOptions' => Teacher::categoryOptions(),
+            'vehicleCategoryFilter' => $categoryFilter,
+            'vehicleCategoryOptions' => Vehicle::categoryOptions(),
+            'teacherSummary' => $teacherSummary,
         ]);
     }
 
@@ -68,40 +82,53 @@ class AppointmentController extends Controller
         $validated = $request->validate([
             'teacher_id' => ['required', 'integer', 'exists:teachers,id'],
             'student_id' => ['nullable', 'integer', 'exists:students,id'],
-            'vehicle_id' => ['nullable', 'integer', 'exists:vehicles,id'],
+            'vehicle_id' => ['required', 'integer', 'exists:vehicles,id'],
             'type' => ['required', Rule::in([Appointment::TYPE_LESSON, Appointment::TYPE_UNAVAILABLE])],
-            'lesson_category' => ['nullable', 'string', Rule::in(['A', 'B'])],
             'slot_date' => ['required', 'date'],
             'slot_time' => ['required', 'date_format:H:i'],
             'notes' => ['nullable', 'string'],
-            'teacher_category' => ['nullable', 'string'],
+            'vehicle_category' => ['nullable', 'string'],
         ]);
 
+        $vehicle = Vehicle::query()->findOrFail($validated['vehicle_id']);
         $teacher = Teacher::findOrFail($validated['teacher_id']);
         $startsAt = $this->resolveSlotDateTime($validated['slot_date'], $validated['slot_time']);
         $endsAt = $startsAt->copy()->addMinutes(50);
+
+        abort_if(! $teacher->isSchedulable(), 422, 'Este professor nao esta disponivel para aparecer na agenda de veiculos.');
         abort_if(! $teacher->supportsTimeSlot($validated['slot_time']), 422, 'Este horario esta fora do turno disponivel do professor.');
 
-        $lessonData = $validated['type'] === Appointment::TYPE_LESSON
+        $appointmentData = $validated['type'] === Appointment::TYPE_LESSON
             ? $this->resolveLessonData(
                 $validated['student_id'] ?? null,
-                $validated['vehicle_id'] ?? null,
-                $validated['lesson_category'] ?? null,
                 $teacher,
+                $vehicle,
                 $startsAt
             )
-            : ['student_id' => null, 'vehicle_id' => null, 'lesson_category' => null];
+            : ['student_id' => null, 'lesson_category' => null];
+
+        $teacherConflict = Appointment::query()
+            ->where('teacher_id', $teacher->id)
+            ->where('starts_at', $startsAt)
+            ->where('vehicle_id', '!=', $vehicle->id)
+            ->exists();
+
+        abort_if(
+            $teacherConflict,
+            422,
+            'Este professor ja possui um agendamento neste horario.'
+        );
 
         Appointment::updateOrCreate(
             [
-                'teacher_id' => $teacher->id,
+                'vehicle_id' => $vehicle->id,
                 'starts_at' => $startsAt,
             ],
             [
-                'student_id' => $lessonData['student_id'],
-                'vehicle_id' => $lessonData['vehicle_id'],
+                'teacher_id' => $teacher->id,
+                'student_id' => $appointmentData['student_id'],
                 'type' => $validated['type'],
-                'lesson_category' => $lessonData['lesson_category'],
+                'lesson_category' => $appointmentData['lesson_category'],
                 'ends_at' => $endsAt,
                 'notes' => $validated['notes'] ?? null,
             ]
@@ -109,8 +136,8 @@ class AppointmentController extends Controller
 
         return redirect()
             ->route('appointments.index', [
-                'teacher' => $teacher->id,
-                'teacher_category' => $validated['teacher_category'] ?? null,
+                'vehicle' => $vehicle->id,
+                'vehicle_category' => $validated['vehicle_category'] ?? null,
                 'week_start' => Carbon::parse($validated['slot_date'])->startOfWeek(Carbon::MONDAY)->toDateString(),
             ])
             ->with('success', 'Agenda atualizada com sucesso.');
@@ -118,15 +145,15 @@ class AppointmentController extends Controller
 
     public function destroy(Request $request, Appointment $appointment): RedirectResponse
     {
-        $teacherId = $appointment->teacher_id;
+        $vehicleId = $appointment->vehicle_id;
         $weekStart = $appointment->starts_at->copy()->startOfWeek(Carbon::MONDAY)->toDateString();
 
         $appointment->delete();
 
         return redirect()
             ->route('appointments.index', [
-                'teacher' => $teacherId,
-                'teacher_category' => $request->string('teacher_category')->toString() ?: null,
+                'vehicle' => $vehicleId,
+                'vehicle_category' => $request->string('vehicle_category')->toString() ?: null,
                 'week_start' => $weekStart,
             ])
             ->with('success', 'Horario liberado com sucesso.');
@@ -161,13 +188,13 @@ class AppointmentController extends Controller
         return $weekStart->startOfWeek(Carbon::MONDAY);
     }
 
-    private function resolveTeacher(Request $request, Collection $teachers): ?Teacher
+    private function resolveVehicle(Request $request, Collection $vehicles): ?Vehicle
     {
-        if ($request->filled('teacher')) {
-            return $teachers->firstWhere('id', (int) $request->integer('teacher'));
+        if ($request->filled('vehicle')) {
+            return $vehicles->firstWhere('id', (int) $request->integer('vehicle'));
         }
 
-        return $teachers->first();
+        return $vehicles->first();
     }
 
     private function resolveSlotDateTime(string $date, string $time): Carbon
@@ -181,13 +208,11 @@ class AppointmentController extends Controller
     }
 
     /**
-     * @return array{student_id:int, vehicle_id:int, lesson_category:string}
+     * @return array{student_id:int, lesson_category:string}
      */
-    private function resolveLessonData(?int $studentId, ?int $vehicleId, ?string $lessonCategory, Teacher $teacher, Carbon $startsAt): array
+    private function resolveLessonData(?int $studentId, Teacher $teacher, Vehicle $vehicle, Carbon $startsAt): array
     {
         abort_if(! $studentId, 422, 'Selecione um aluno para marcar a aula.');
-        abort_if(! $vehicleId, 422, 'Selecione um veiculo para marcar a aula.');
-        abort_if(! $lessonCategory, 422, 'Informe se a aula sera de categoria A ou B.');
 
         $student = Student::query()
             ->whereKey($studentId)
@@ -202,33 +227,15 @@ class AppointmentController extends Controller
         );
 
         abort_if(
-            ! $teacher->teachesCategory($lessonCategory),
+            ! $teacher->teachesCategory($vehicle->categoria),
             422,
-            'O professor selecionado nao ensina esta categoria.'
+            'O professor selecionado nao ensina a categoria deste veiculo.'
         );
 
         abort_if(
-            ! $this->studentSupportsLessonCategory($student, $lessonCategory),
+            ! $student->supportsLessonCategory($vehicle->categoria),
             422,
-            'A categoria da aula nao e compativel com o cadastro do aluno.'
-        );
-
-        $vehicle = Vehicle::query()
-            ->whereKey($vehicleId)
-            ->first();
-
-        abort_unless($vehicle, 422, 'Veiculo nao encontrado.');
-
-        abort_if(
-            (int) $vehicle->teacher_id !== (int) $teacher->id,
-            422,
-            'O veiculo selecionado nao pertence ao professor escolhido.'
-        );
-
-        abort_if(
-            $vehicle->categoria !== $lessonCategory,
-            422,
-            'A categoria do veiculo precisa ser igual a categoria da aula.'
+            'A categoria do veiculo nao e compativel com o cadastro do aluno.'
         );
 
         $vehicleConflict = Appointment::query()
@@ -249,21 +256,37 @@ class AppointmentController extends Controller
 
         return [
             'student_id' => (int) $student->id,
-            'vehicle_id' => (int) $vehicle->id,
-            'lesson_category' => $lessonCategory,
+            'lesson_category' => $vehicle->categoria,
         ];
     }
-
-    private function studentSupportsLessonCategory(Student $student, string $lessonCategory): bool
+    /**
+     * @return Collection<int, array{teacher: Teacher, days: Collection<string, Collection<int, Appointment>>}>
+     */
+    private function teacherSummary(Carbon $weekStart, Collection $weekDays): Collection
     {
-        if ($student->categoria_pretendida === null || $student->categoria_pretendida === '') {
-            return in_array($lessonCategory, ['A', 'B'], true);
-        }
+        $appointments = Appointment::query()
+            ->with(['teacher', 'student', 'vehicle'])
+            ->whereBetween('starts_at', [$weekStart->copy()->startOfDay(), $weekStart->copy()->addDays(5)->endOfDay()])
+            ->orderBy('starts_at')
+            ->get();
 
-        if ($student->categoria_pretendida === 'AB') {
-            return in_array($lessonCategory, ['A', 'B'], true);
-        }
+        return $appointments
+            ->groupBy('teacher_id')
+            ->map(function (Collection $teacherAppointments) use ($weekDays) {
+                /** @var Appointment $firstAppointment */
+                $firstAppointment = $teacherAppointments->first();
 
-        return $student->categoria_pretendida === $lessonCategory;
+                return [
+                    'teacher' => $firstAppointment->teacher,
+                    'days' => $weekDays->mapWithKeys(function (Carbon $day) use ($teacherAppointments) {
+                        $items = $teacherAppointments
+                            ->filter(fn (Appointment $appointment) => $appointment->starts_at->isSameDay($day))
+                            ->values();
+
+                        return [$day->toDateString() => $items];
+                    }),
+                ];
+            })
+            ->values();
     }
 }

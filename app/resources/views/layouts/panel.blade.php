@@ -8,8 +8,8 @@
     <style>
         * { box-sizing: border-box; }
         :root {
-            --shadow-soft: 0 24px 60px rgba(20, 33, 61, 0.10);
-            --shadow-card: 0 18px 40px rgba(20, 33, 61, 0.08);
+            --shadow-soft: 0 24px 60px rgba(var(--color-secondary-rgb), 0.10);
+            --shadow-card: 0 18px 40px rgba(var(--color-secondary-rgb), 0.08);
             --radius-xl: 28px;
         }
         body {
@@ -20,7 +20,7 @@
             background: var(--color-background);
             background-image:
                 radial-gradient(circle at top left, rgba(217, 119, 6, 0.15), transparent 32%),
-                radial-gradient(circle at bottom right, rgba(20, 33, 61, 0.12), transparent 30%);
+                radial-gradient(circle at bottom right, rgba(var(--color-secondary-rgb), 0.12), transparent 30%);
         }
         .app {
             min-height: 100vh;
@@ -30,7 +30,7 @@
         }
         .sidebar {
             width: 280px;
-            background: linear-gradient(180deg, rgba(20, 33, 61, 0.98), rgba(17, 24, 39, 0.92));
+            background: linear-gradient(180deg, rgba(var(--color-secondary-rgb), 0.98), rgba(var(--color-secondary-rgb), 0.88));
             color: #fff;
             padding: 24px 18px;
             border-radius: var(--radius-xl);
@@ -177,7 +177,7 @@
             cursor: pointer;
         }
         .btn-secondary {
-            border: 1px solid rgba(20, 33, 61, 0.12);
+            border: 1px solid rgba(var(--color-secondary-rgb), 0.12);
             background: rgba(255, 255, 255, 0.88);
             color: var(--color-secondary);
         }
@@ -190,7 +190,7 @@
             margin-bottom: 26px;
             padding: 26px 28px;
             border-radius: 24px;
-            background: linear-gradient(135deg, rgba(20, 33, 61, 0.96), rgba(34, 52, 96, 0.92));
+            background: linear-gradient(135deg, rgba(var(--color-secondary-rgb), 0.96), rgba(var(--color-secondary-rgb), 0.84));
             color: #fff;
             box-shadow: var(--shadow-card);
         }
@@ -251,7 +251,7 @@
         .surface-card {
             border-radius: 24px;
             background: rgba(255, 255, 255, 0.92);
-            border: 1px solid rgba(20, 33, 61, 0.08);
+            border: 1px solid rgba(var(--color-secondary-rgb), 0.08);
             box-shadow: var(--shadow-card);
         }
         .table-card {

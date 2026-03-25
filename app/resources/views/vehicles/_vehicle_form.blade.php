@@ -1,6 +1,5 @@
 @php
     $vehicle = $vehicle ?? null;
-    $teachers = $teachers ?? collect();
     $v = fn (string $key) => old($key, $vehicle?->{$key});
     $categoryOptions = \App\Models\Vehicle::categoryOptions();
 @endphp
@@ -62,19 +61,10 @@
         <div class="surface-card section-card">
             <div class="section-heading">
                 <h2>Informacoes do veiculo</h2>
-                <p>Defina o professor responsavel, a placa e a categoria de uso.</p>
+                <p>Defina a placa e a categoria de uso do veiculo.</p>
             </div>
 
             <div class="vehicle-form-grid">
-                <div class="vehicle-field vehicle-col-12">
-                    <label for="teacher_id">Professor responsavel</label>
-                    <select id="teacher_id" name="teacher_id" required>
-                        <option value="">Selecione um professor</option>
-                        @foreach ($teachers as $teacher)
-                            <option value="{{ $teacher->id }}" @selected((string) $v('teacher_id') === (string) $teacher->id)>{{ $teacher->nome }}</option>
-                        @endforeach
-                    </select>
-                </div>
                 <div class="vehicle-field vehicle-col-6">
                     <label for="placa">Placa</label>
                     <input id="placa" name="placa" type="text" placeholder="ABC1D23" value="{{ $v('placa') }}" required>

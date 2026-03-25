@@ -20,7 +20,12 @@ class StudentController extends Controller
             ->get();
 
         $baseQuery = Student::query()
-            ->with('teacher')
+            ->with([
+                'teacher',
+                'appointments' => fn ($query) => $query
+                    ->with(['teacher', 'vehicle'])
+                    ->orderByDesc('starts_at'),
+            ])
             ->orderBy('nome');
 
         if ($request->filled('search')) {

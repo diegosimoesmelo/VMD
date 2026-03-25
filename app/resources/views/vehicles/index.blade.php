@@ -13,7 +13,7 @@
         .record-table td {
             padding: 16px 18px;
             text-align: left;
-            border-bottom: 1px solid rgba(20, 33, 61, 0.08);
+            border-bottom: 1px solid rgba(var(--color-secondary-rgb), 0.08);
             vertical-align: middle;
         }
         .record-table th {
@@ -39,7 +39,7 @@
             align-items: center;
             padding: 6px 10px;
             border-radius: 999px;
-            background: rgba(20, 33, 61, 0.06);
+            background: rgba(var(--color-secondary-rgb), 0.06);
             color: var(--color-secondary);
             font-size: 12px;
             font-weight: 700;
@@ -49,8 +49,8 @@
     <div class="page-header">
         <div class="header-copy">
             <span class="eyebrow">Modulo de veiculos</span>
-            <h1>Frota organizada por professor e categoria</h1>
-            <p>Cadastre os veiculos da autoescola para controlar placa, categoria e uso na agenda.</p>
+            <h1>Frota organizada por placa e categoria</h1>
+            <p>Cadastre os veiculos da autoescola para controlar placa, categoria e uso compartilhado na agenda.</p>
             <div class="header-stats">
                 <div class="stat-chip">
                     <strong>{{ $vehicles->count() }}</strong>
@@ -81,7 +81,6 @@
                         <tr>
                             <th>Placa</th>
                             <th>Categoria</th>
-                            <th>Professor</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -94,10 +93,6 @@
                                 </td>
                                 <td>
                                     <span class="tag">{{ \App\Models\Vehicle::categoryOptions()[$vehicle->categoria] ?? $vehicle->categoria }}</span>
-                                </td>
-                                <td>
-                                    <span class="record-title">{{ $vehicle->teacher?->nome ?: '-' }}</span>
-                                    <span class="record-subtitle">Professor responsavel</span>
                                 </td>
                                 <td>
                                     <a class="btn-secondary" href="{{ route('vehicles.edit', $vehicle) }}">Editar</a>

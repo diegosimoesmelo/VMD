@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Teacher;
 use App\Models\Vehicle;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,7 +13,6 @@ class VehicleController extends Controller
     public function index(): View
     {
         $vehicles = Vehicle::query()
-            ->with('teacher')
             ->orderBy('placa')
             ->get();
 
@@ -23,11 +21,7 @@ class VehicleController extends Controller
 
     public function create(): View
     {
-        $teachers = Teacher::query()
-            ->orderBy('nome')
-            ->get();
-
-        return view('vehicles.create', compact('teachers'));
+        return view('vehicles.create');
     }
 
     public function store(Request $request): RedirectResponse
@@ -43,11 +37,7 @@ class VehicleController extends Controller
 
     public function edit(Vehicle $vehicle): View
     {
-        $teachers = Teacher::query()
-            ->orderBy('nome')
-            ->get();
-
-        return view('vehicles.edit', compact('vehicle', 'teachers'));
+        return view('vehicles.edit', compact('vehicle'));
     }
 
     public function update(Request $request, Vehicle $vehicle): RedirectResponse
@@ -67,7 +57,6 @@ class VehicleController extends Controller
     private function rules(?Vehicle $vehicle = null): array
     {
         return [
-            'teacher_id' => ['required', 'integer', 'exists:teachers,id'],
             'placa' => [
                 'required',
                 'string',

@@ -13,7 +13,7 @@
         .record-table td {
             padding: 16px 18px;
             text-align: left;
-            border-bottom: 1px solid rgba(20, 33, 61, 0.08);
+            border-bottom: 1px solid rgba(var(--color-secondary-rgb), 0.08);
             vertical-align: middle;
         }
         .record-table th {
@@ -34,7 +34,7 @@
             align-items: center;
             padding: 6px 10px;
             border-radius: 999px;
-            background: rgba(20, 33, 61, 0.06);
+            background: rgba(var(--color-secondary-rgb), 0.06);
             color: var(--color-secondary);
             font-size: 12px;
             font-weight: 700;
@@ -48,6 +48,10 @@
             margin-top: 4px;
             color: var(--color-muted-text);
             font-size: 13px;
+        }
+        .tag.muted {
+            background: rgba(239, 68, 68, 0.10);
+            color: #991b1b;
         }
     </style>
 
@@ -89,6 +93,7 @@
                             <th>Telefone</th>
                             <th>Categorias</th>
                             <th>Turnos</th>
+                            <th>Agenda</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -114,6 +119,9 @@
                                             <span class="tag">{{ ucfirst($shift) }}</span>
                                         @endforeach
                                     </div>
+                                </td>
+                                <td>
+                                    <span class="tag {{ $teacher->isSchedulable() ? '' : 'muted' }}">{{ $teacher->schedulingStatusLabel() }}</span>
                                 </td>
                                 <td>
                                     <a class="btn-secondary" href="{{ route('teachers.edit', $teacher) }}">Editar</a>

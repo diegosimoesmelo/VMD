@@ -16,7 +16,7 @@
         gap: 10px;
         padding: 12px 16px;
         border-radius: 999px;
-        border: 1px solid rgba(20, 33, 61, 0.10);
+        border: 1px solid rgba(var(--color-secondary-rgb), 0.10);
         background: rgba(255, 255, 255, 0.76);
         color: var(--color-muted-text);
         font-size: 13px;

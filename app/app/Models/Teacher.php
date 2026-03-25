@@ -10,6 +10,11 @@ class Teacher extends Model
 {
     use HasFactory;
 
+    public const STATUS_AVAILABLE = 'disponivel';
+    public const STATUS_VACATION = 'ferias';
+    public const STATUS_MEDICAL = 'atestado';
+    public const STATUS_UNAVAILABLE = 'indisponivel';
+
     public const SHIFT_MORNING = 'manha';
     public const SHIFT_AFTERNOON = 'tarde';
     public const SHIFT_NIGHT = 'noite';
@@ -20,6 +25,7 @@ class Teacher extends Model
         'telefone',
         'categorias_ensino',
         'turnos_disponiveis',
+        'status_agendamento',
     ];
 
     protected $casts = [
@@ -32,9 +38,27 @@ class Teacher extends Model
         return $this->hasMany(Appointment::class);
     }
 
-    public function vehicles(): HasMany
+    /**
+     * @return array<string, string>
+     */
+    public static function schedulingStatusOptions(): array
     {
-        return $this->hasMany(Vehicle::class);
+        return [
+            self::STATUS_AVAILABLE => 'Disponivel para agenda',
+            self::STATUS_VACATION => 'Ferias',
+            self::STATUS_MEDICAL => 'Atestado',
+            self::STATUS_UNAVAILABLE => 'Indisponivel',
+        ];
+    }
+
+    public function schedulingStatusLabel(): string
+    {
+        return self::schedulingStatusOptions()[$this->status_agendamento] ?? $this->status_agendamento;
+    }
+
+    public function isSchedulable(): bool
+    {
+        return $this->status_agendamento === self::STATUS_AVAILABLE;
     }
 
     /**

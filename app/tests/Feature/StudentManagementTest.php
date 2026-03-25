@@ -2,8 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Appointment;
 use App\Models\Student;
+use App\Models\Teacher;
 use App\Models\User;
+use App\Models\Vehicle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -64,5 +67,54 @@ class StudentManagementTest extends TestCase
             'id' => $student->id,
             'status' => Student::STATUS_THEORY_PASSED,
         ]);
+    }
+
+    public function test_authenticated_user_can_see_student_appointments_in_list_modal(): void
+    {
+        $user = User::factory()->create();
+        $teacher = Teacher::query()->create([
+            'nome' => 'Professor Agenda',
+            'cpf' => '123.123.123-12',
+            'telefone' => '(81) 98888-7777',
+            'categorias_ensino' => ['B'],
+            'turnos_disponiveis' => ['manha'],
+            'status_agendamento' => Teacher::STATUS_AVAILABLE,
+        ]);
+        $vehicle = Vehicle::query()->create([
+            'placa' => 'QWE1R23',
+            'categoria' => 'B',
+        ]);
+        $student = Student::query()->create([
+            'nome' => 'Aluno Agenda',
+            'endereco' => 'Rua Modal',
+            'telefone' => '(81) 97777-1111',
+            'data_nascimento' => '2001-01-01',
+            'cpf' => '111.222.333-44',
+            'nome_mae' => 'Mae Agenda',
+            'status' => Student::STATUS_PRACTICAL_CLASS,
+            'categoria_pretendida' => 'B',
+        ]);
+
+        Appointment::query()->create([
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+            'vehicle_id' => $vehicle->id,
+            'type' => Appointment::TYPE_LESSON,
+            'lesson_category' => 'B',
+            'starts_at' => '2026-03-26 14:00:00',
+            'ends_at' => '2026-03-26 14:50:00',
+            'notes' => 'Aula de baliza',
+        ]);
+
+        $response = $this
+            ->actingAs($user)
+            ->get(route('students.index'));
+
+        $response->assertOk();
+        $response->assertSee('Ver aulas');
+        $response->assertSee('26/03/2026 as 14:00');
+        $response->assertSee('Professor: Professor Agenda');
+        $response->assertSee('Veiculo: QWE1R23');
+        $response->assertSee('Observacoes: Aula de baliza');
     }
 }

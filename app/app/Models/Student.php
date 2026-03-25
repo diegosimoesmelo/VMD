@@ -116,4 +116,34 @@ class Student extends Model
 
         return $flow[$index + 1];
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function lessonCategoryLabels(): array
+    {
+        return [
+            'A' => 'Aula A',
+            'B' => 'Aula B',
+            'AB' => 'Aula A ou B',
+        ];
+    }
+
+    public function lessonCategoryLabel(): string
+    {
+        return self::lessonCategoryLabels()[$this->categoria_pretendida] ?? 'Categoria nao informada';
+    }
+
+    public function supportsLessonCategory(string $lessonCategory): bool
+    {
+        if ($this->categoria_pretendida === null || $this->categoria_pretendida === '') {
+            return in_array($lessonCategory, ['A', 'B'], true);
+        }
+
+        if ($this->categoria_pretendida === 'AB') {
+            return in_array($lessonCategory, ['A', 'B'], true);
+        }
+
+        return $this->categoria_pretendida === $lessonCategory;
+    }
 }

@@ -5,6 +5,7 @@
     $selectedShifts = old('turnos_disponiveis', $teacher?->turnos_disponiveis ?? []);
     $categoryOptions = \App\Models\Teacher::categoryOptions();
     $shiftOptions = \App\Models\Teacher::shiftOptions();
+    $schedulingStatusOptions = \App\Models\Teacher::schedulingStatusOptions();
 @endphp
 
 <style>
@@ -27,7 +28,7 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        border: 1px solid rgba(20, 33, 61, 0.10);
+        border: 1px solid rgba(var(--color-secondary-rgb), 0.10);
         border-radius: 18px;
         padding: 14px 16px;
         background: rgba(255, 255, 255, 0.92);
@@ -132,6 +133,14 @@
                             </label>
                         @endforeach
                     </div>
+                </div>
+                <div class="teacher-field teacher-col-12">
+                    <label for="status_agendamento">Disponibilidade para aparecer na agenda</label>
+                    <select id="status_agendamento" name="status_agendamento">
+                        @foreach ($schedulingStatusOptions as $statusValue => $statusLabel)
+                            <option value="{{ $statusValue }}" @selected(($v('status_agendamento') ?: \App\Models\Teacher::STATUS_AVAILABLE) === $statusValue)>{{ $statusLabel }}</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
         </div>

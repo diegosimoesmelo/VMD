@@ -14,7 +14,7 @@ class AppointmentManagementTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_authenticated_user_can_view_weekly_schedule(): void
+    public function test_authenticated_user_can_view_vehicle_weekly_schedule(): void
     {
         $user = User::factory()->create();
         $teacher = Teacher::query()->create([
@@ -24,90 +24,21 @@ class AppointmentManagementTest extends TestCase
             'categorias_ensino' => ['B'],
             'turnos_disponiveis' => ['manha', 'tarde'],
         ]);
-
-        $response = $this
-            ->actingAs($user)
-            ->get(route('appointments.index', ['teacher' => $teacher->id, 'week_start' => '2026-03-23']));
-
-        $response->assertOk();
-        $response->assertSee('Agenda de professores');
-        $response->assertSee('Joao Instrutor');
-    }
-
-    public function test_schedule_student_select_lists_all_active_students(): void
-    {
-        $user = User::factory()->create();
-        $selectedTeacher = Teacher::query()->create([
-            'nome' => 'Sonia Instrutora',
-            'cpf' => '111.111.111-11',
-            'telefone' => '(81) 90000-0001',
-            'categorias_ensino' => ['B'],
-            'turnos_disponiveis' => ['manha'],
-        ]);
-        $otherTeacher = Teacher::query()->create([
-            'nome' => 'Carlos Instrutor',
-            'cpf' => '222.222.222-22',
-            'telefone' => '(81) 90000-0002',
-            'categorias_ensino' => ['A'],
-            'turnos_disponiveis' => ['tarde'],
-        ]);
-
-        Student::query()->create([
-            'nome' => 'Aluno Vinculado',
-            'endereco' => 'Rua 1',
-            'telefone' => '(81) 91111-1111',
-            'data_nascimento' => '2000-01-01',
-            'cpf' => '100.100.100-10',
-            'nome_mae' => 'Mae 1',
-            'teacher_id' => $selectedTeacher->id,
-            'status' => Student::STATUS_THEORY_PASSED,
-            'categoria_pretendida' => 'B',
-        ]);
-        Student::query()->create([
-            'nome' => 'Aluno Outro Professor',
-            'endereco' => 'Rua 2',
-            'telefone' => '(81) 92222-2222',
-            'data_nascimento' => '2001-02-02',
-            'cpf' => '200.200.200-20',
-            'nome_mae' => 'Mae 2',
-            'teacher_id' => $otherTeacher->id,
-            'status' => Student::STATUS_PRACTICAL_CLASS,
-            'categoria_pretendida' => 'A',
-        ]);
-        Student::query()->create([
-            'nome' => 'Aluno Sem Professor',
-            'endereco' => 'Rua 3',
-            'telefone' => '(81) 93333-3333',
-            'data_nascimento' => '2002-03-03',
-            'cpf' => '300.300.300-30',
-            'nome_mae' => 'Mae 3',
-            'teacher_id' => null,
-            'status' => Student::STATUS_THEORY_CLASS,
-            'categoria_pretendida' => 'AB',
-        ]);
-        Student::query()->create([
-            'nome' => 'Aluno Finalizado',
-            'endereco' => 'Rua 4',
-            'telefone' => '(81) 94444-4444',
-            'data_nascimento' => '2003-04-04',
-            'cpf' => '400.400.400-40',
-            'nome_mae' => 'Mae 4',
-            'teacher_id' => null,
-            'status' => Student::STATUS_FINISHED,
+        $vehicle = Vehicle::query()->create([
+            'placa' => 'ABC1D23',
+            'categoria' => 'B',
         ]);
 
         $response = $this
             ->actingAs($user)
-            ->get(route('appointments.index', ['teacher' => $selectedTeacher->id, 'week_start' => '2026-03-23']));
+            ->get(route('appointments.index', ['vehicle' => $vehicle->id, 'week_start' => '2026-03-23']));
 
         $response->assertOk();
-        $response->assertSee('Aluno Vinculado - Aula B - vinculado a este professor');
-        $response->assertSee('Aluno Outro Professor - Aula A - professor: Carlos Instrutor');
-        $response->assertSee('Aluno Sem Professor - Aula A ou B - sem professor');
-        $response->assertDontSee('Aluno Finalizado');
+        $response->assertSee('Agenda de veiculos');
+        $response->assertSee('ABC1D23');
     }
 
-    public function test_authenticated_user_can_book_lesson_for_teacher_student_pair(): void
+    public function test_authenticated_user_can_book_lesson_from_vehicle_schedule(): void
     {
         $user = User::factory()->create();
         $teacher = Teacher::query()->create([
@@ -118,7 +49,6 @@ class AppointmentManagementTest extends TestCase
             'turnos_disponiveis' => ['manha'],
         ]);
         $vehicle = Vehicle::query()->create([
-            'teacher_id' => $teacher->id,
             'placa' => 'AAA1A11',
             'categoria' => 'B',
         ]);
@@ -141,13 +71,15 @@ class AppointmentManagementTest extends TestCase
                 'student_id' => $student->id,
                 'vehicle_id' => $vehicle->id,
                 'type' => Appointment::TYPE_LESSON,
-                'lesson_category' => 'B',
                 'slot_date' => '2026-03-23',
                 'slot_time' => '07:00',
                 'notes' => 'Aula inaugural',
             ]);
 
-        $response->assertRedirect();
+        $response->assertRedirect(route('appointments.index', [
+            'vehicle' => $vehicle->id,
+            'week_start' => '2026-03-23',
+        ]));
         $response->assertSessionHas('success');
 
         $this->assertDatabaseHas('appointments', [
@@ -160,112 +92,165 @@ class AppointmentManagementTest extends TestCase
         ]);
     }
 
-    public function test_booking_lesson_assigns_teacher_to_student_without_previous_link(): void
+    public function test_vehicle_schedule_filters_students_by_vehicle_category(): void
     {
         $user = User::factory()->create();
         $teacher = Teacher::query()->create([
-            'nome' => 'Paulo Instrutor',
-            'cpf' => '555.444.333-22',
-            'telefone' => '(81) 96666-1111',
-            'categorias_ensino' => ['B'],
-            'turnos_disponiveis' => ['tarde'],
-        ]);
-        $vehicle = Vehicle::query()->create([
-            'teacher_id' => $teacher->id,
-            'placa' => 'BBB2B22',
-            'categoria' => 'B',
-        ]);
-        $student = Student::query()->create([
-            'nome' => 'Fernanda Lima',
-            'endereco' => 'Rua B',
-            'telefone' => '(81) 97777-2222',
-            'data_nascimento' => '2001-02-02',
-            'cpf' => '987.654.321-00',
-            'nome_mae' => 'Marcia Lima',
-            'teacher_id' => null,
-            'status' => Student::STATUS_THEORY_PASSED,
-            'categoria_pretendida' => 'B',
-        ]);
-
-        $response = $this
-            ->actingAs($user)
-            ->post(route('appointments.store'), [
-                'teacher_id' => $teacher->id,
-                'student_id' => $student->id,
-                'vehicle_id' => $vehicle->id,
-                'type' => Appointment::TYPE_LESSON,
-                'lesson_category' => 'B',
-                'slot_date' => '2026-03-24',
-                'slot_time' => '14:00',
-            ]);
-
-        $response->assertRedirect();
-
-        $this->assertDatabaseHas('students', [
-            'id' => $student->id,
-            'teacher_id' => $teacher->id,
-        ]);
-    }
-
-    public function test_can_book_lesson_for_student_linked_to_another_teacher(): void
-    {
-        $user = User::factory()->create();
-        $teacher = Teacher::query()->create([
-            'nome' => 'Professor Agendador',
-            'cpf' => '444.555.666-77',
-            'telefone' => '(81) 95555-0001',
-            'categorias_ensino' => ['B'],
+            'nome' => 'Instrutor Moto',
+            'cpf' => '111.111.111-11',
+            'telefone' => '(81) 90000-0001',
+            'categorias_ensino' => ['A'],
             'turnos_disponiveis' => ['manha'],
         ]);
         $vehicle = Vehicle::query()->create([
-            'teacher_id' => $teacher->id,
-            'placa' => 'CCC3C33',
-            'categoria' => 'B',
+            'placa' => 'MOT0A11',
+            'categoria' => 'A',
         ]);
-        $otherTeacher = Teacher::query()->create([
-            'nome' => 'Professor Original',
-            'cpf' => '888.777.666-55',
-            'telefone' => '(81) 95555-0002',
-            'categorias_ensino' => ['B'],
-            'turnos_disponiveis' => ['tarde'],
+
+        Student::query()->create([
+            'nome' => 'Aluno Categoria A',
+            'endereco' => 'Rua 1',
+            'telefone' => '(81) 91111-1111',
+            'data_nascimento' => '2000-01-01',
+            'cpf' => '100.100.100-10',
+            'nome_mae' => 'Mae 1',
+            'status' => Student::STATUS_THEORY_PASSED,
+            'categoria_pretendida' => 'A',
         ]);
-        $student = Student::query()->create([
-            'nome' => 'Aluno Compartilhado',
-            'endereco' => 'Rua E',
-            'telefone' => '(81) 94444-1111',
-            'data_nascimento' => '2001-05-05',
-            'cpf' => '741.852.963-00',
-            'nome_mae' => 'Claudia Lima',
-            'teacher_id' => $otherTeacher->id,
+        Student::query()->create([
+            'nome' => 'Aluno Categoria AB',
+            'endereco' => 'Rua 2',
+            'telefone' => '(81) 92222-2222',
+            'data_nascimento' => '2001-02-02',
+            'cpf' => '200.200.200-20',
+            'nome_mae' => 'Mae 2',
             'status' => Student::STATUS_PRACTICAL_CLASS,
+            'categoria_pretendida' => 'AB',
+        ]);
+        Student::query()->create([
+            'nome' => 'Aluno Categoria B',
+            'endereco' => 'Rua 3',
+            'telefone' => '(81) 93333-3333',
+            'data_nascimento' => '2002-03-03',
+            'cpf' => '300.300.300-30',
+            'nome_mae' => 'Mae 3',
+            'status' => Student::STATUS_THEORY_CLASS,
             'categoria_pretendida' => 'B',
         ]);
 
         $response = $this
             ->actingAs($user)
+            ->get(route('appointments.index', ['vehicle' => $vehicle->id, 'week_start' => '2026-03-23']));
+
+        $response->assertOk();
+        $response->assertSee('Aluno Categoria A - Aula A');
+        $response->assertSee('Aluno Categoria AB - Aula A ou B');
+        $response->assertDontSee('Aluno Categoria B - Aula B');
+    }
+
+    public function test_student_with_ab_category_can_book_a_and_b_lessons(): void
+    {
+        $user = User::factory()->create();
+        $teacherA = Teacher::query()->create([
+            'nome' => 'Professor Categoria A',
+            'cpf' => '100.200.300-40',
+            'telefone' => '(81) 90000-1001',
+            'categorias_ensino' => ['A'],
+            'turnos_disponiveis' => ['manha'],
+        ]);
+        $teacherB = Teacher::query()->create([
+            'nome' => 'Professor Categoria B',
+            'cpf' => '500.600.700-80',
+            'telefone' => '(81) 90000-1002',
+            'categorias_ensino' => ['B'],
+            'turnos_disponiveis' => ['manha'],
+        ]);
+        $vehicleA = Vehicle::query()->create([
+            'placa' => 'MOT1A11',
+            'categoria' => 'A',
+        ]);
+        $vehicleB = Vehicle::query()->create([
+            'placa' => 'CAR2B22',
+            'categoria' => 'B',
+        ]);
+        $student = Student::query()->create([
+            'nome' => 'Aluno Categoria AB',
+            'endereco' => 'Rua AB',
+            'telefone' => '(81) 91111-2020',
+            'data_nascimento' => '2000-05-05',
+            'cpf' => '456.456.456-45',
+            'nome_mae' => 'Mae AB',
+            'status' => Student::STATUS_PRACTICAL_CLASS,
+            'categoria_pretendida' => 'AB',
+        ]);
+
+        $this
+            ->actingAs($user)
             ->post(route('appointments.store'), [
-                'teacher_id' => $teacher->id,
+                'teacher_id' => $teacherA->id,
                 'student_id' => $student->id,
-                'vehicle_id' => $vehicle->id,
+                'vehicle_id' => $vehicleA->id,
                 'type' => Appointment::TYPE_LESSON,
-                'lesson_category' => 'B',
+                'slot_date' => '2026-03-23',
+                'slot_time' => '07:00',
+            ])
+            ->assertRedirect();
+
+        $this
+            ->actingAs($user)
+            ->post(route('appointments.store'), [
+                'teacher_id' => $teacherB->id,
+                'student_id' => $student->id,
+                'vehicle_id' => $vehicleB->id,
+                'type' => Appointment::TYPE_LESSON,
                 'slot_date' => '2026-03-23',
                 'slot_time' => '07:50',
-            ]);
-
-        $response->assertRedirect();
+            ])
+            ->assertRedirect();
 
         $this->assertDatabaseHas('appointments', [
-            'teacher_id' => $teacher->id,
             'student_id' => $student->id,
-            'vehicle_id' => $vehicle->id,
+            'vehicle_id' => $vehicleA->id,
+            'lesson_category' => 'A',
+        ]);
+        $this->assertDatabaseHas('appointments', [
+            'student_id' => $student->id,
+            'vehicle_id' => $vehicleB->id,
             'lesson_category' => 'B',
         ]);
+    }
 
-        $this->assertDatabaseHas('students', [
-            'id' => $student->id,
-            'teacher_id' => $otherTeacher->id,
+    public function test_vehicle_schedule_hides_teacher_not_available_for_scheduling(): void
+    {
+        $user = User::factory()->create();
+        Teacher::query()->create([
+            'nome' => 'Professor Disponivel',
+            'cpf' => '321.321.321-32',
+            'telefone' => '(81) 90000-1000',
+            'categorias_ensino' => ['B'],
+            'turnos_disponiveis' => ['manha'],
+            'status_agendamento' => Teacher::STATUS_AVAILABLE,
         ]);
+        Teacher::query()->create([
+            'nome' => 'Professor de Ferias',
+            'cpf' => '654.654.654-65',
+            'telefone' => '(81) 90000-2000',
+            'categorias_ensino' => ['B'],
+            'turnos_disponiveis' => ['manha'],
+            'status_agendamento' => Teacher::STATUS_VACATION,
+        ]);
+        $vehicle = Vehicle::query()->create([
+            'placa' => 'FER1A55',
+            'categoria' => 'B',
+        ]);
+
+        $response = $this
+            ->actingAs($user)
+            ->get(route('appointments.index', ['vehicle' => $vehicle->id, 'week_start' => '2026-03-23']));
+
+        $response->assertOk();
+        $response->assertSee('Professor Disponivel');
+        $response->assertDontSee('Professor de Ferias');
     }
 
     public function test_cannot_book_lesson_for_finished_student(): void
@@ -279,7 +264,6 @@ class AppointmentManagementTest extends TestCase
             'turnos_disponiveis' => ['manha'],
         ]);
         $vehicle = Vehicle::query()->create([
-            'teacher_id' => $teacher->id,
             'placa' => 'DDD4D44',
             'categoria' => 'B',
         ]);
@@ -297,13 +281,12 @@ class AppointmentManagementTest extends TestCase
 
         $response = $this
             ->actingAs($user)
-            ->from(route('appointments.index', ['teacher' => $teacher->id, 'week_start' => '2026-03-23']))
+            ->from(route('appointments.index', ['vehicle' => $vehicle->id, 'week_start' => '2026-03-23']))
             ->post(route('appointments.store'), [
                 'teacher_id' => $teacher->id,
                 'student_id' => $student->id,
                 'vehicle_id' => $vehicle->id,
                 'type' => Appointment::TYPE_LESSON,
-                'lesson_category' => 'B',
                 'slot_date' => '2026-03-23',
                 'slot_time' => '07:00',
             ]);
@@ -311,7 +294,7 @@ class AppointmentManagementTest extends TestCase
         $response->assertStatus(422);
     }
 
-    public function test_cannot_book_lesson_outside_teacher_shift(): void
+    public function test_cannot_book_professor_outside_teacher_shift(): void
     {
         $user = User::factory()->create();
         $teacher = Teacher::query()->create([
@@ -322,7 +305,6 @@ class AppointmentManagementTest extends TestCase
             'turnos_disponiveis' => ['tarde'],
         ]);
         $vehicle = Vehicle::query()->create([
-            'teacher_id' => $teacher->id,
             'placa' => 'EEE5E55',
             'categoria' => 'B',
         ]);
@@ -340,13 +322,12 @@ class AppointmentManagementTest extends TestCase
 
         $response = $this
             ->actingAs($user)
-            ->from(route('appointments.index', ['teacher' => $teacher->id, 'week_start' => '2026-03-23']))
+            ->from(route('appointments.index', ['vehicle' => $vehicle->id, 'week_start' => '2026-03-23']))
             ->post(route('appointments.store'), [
                 'teacher_id' => $teacher->id,
                 'student_id' => $student->id,
                 'vehicle_id' => $vehicle->id,
                 'type' => Appointment::TYPE_LESSON,
-                'lesson_category' => 'B',
                 'slot_date' => '2026-03-23',
                 'slot_time' => '07:00',
             ]);
@@ -365,7 +346,6 @@ class AppointmentManagementTest extends TestCase
             'turnos_disponiveis' => ['manha'],
         ]);
         $vehicle = Vehicle::query()->create([
-            'teacher_id' => $teacher->id,
             'placa' => 'FFF6F66',
             'categoria' => 'B',
         ]);
@@ -406,7 +386,6 @@ class AppointmentManagementTest extends TestCase
                 'student_id' => $firstStudent->id,
                 'vehicle_id' => $vehicle->id,
                 'type' => Appointment::TYPE_LESSON,
-                'lesson_category' => 'B',
                 'slot_date' => '2026-03-23',
                 'slot_time' => '07:00',
             ])
@@ -414,17 +393,128 @@ class AppointmentManagementTest extends TestCase
 
         $response = $this
             ->actingAs($user)
-            ->from(route('appointments.index', ['teacher' => $secondTeacher->id, 'week_start' => '2026-03-23']))
+            ->from(route('appointments.index', ['vehicle' => $vehicle->id, 'week_start' => '2026-03-23']))
             ->post(route('appointments.store'), [
                 'teacher_id' => $secondTeacher->id,
                 'student_id' => $secondStudent->id,
                 'vehicle_id' => $vehicle->id,
                 'type' => Appointment::TYPE_LESSON,
-                'lesson_category' => 'B',
                 'slot_date' => '2026-03-23',
                 'slot_time' => '07:00',
             ]);
 
         $response->assertStatus(422);
+    }
+
+    public function test_cannot_book_same_teacher_in_two_vehicles_at_same_time(): void
+    {
+        $user = User::factory()->create();
+        $teacher = Teacher::query()->create([
+            'nome' => 'Professor Compartilhado',
+            'cpf' => '123.789.456-11',
+            'telefone' => '(81) 97777-1000',
+            'categorias_ensino' => ['B'],
+            'turnos_disponiveis' => ['manha'],
+        ]);
+        $firstVehicle = Vehicle::query()->create([
+            'placa' => 'GGG7G77',
+            'categoria' => 'B',
+        ]);
+        $secondVehicle = Vehicle::query()->create([
+            'placa' => 'HHH8H88',
+            'categoria' => 'B',
+        ]);
+        $firstStudent = Student::query()->create([
+            'nome' => 'Aluno Um',
+            'endereco' => 'Rua H',
+            'telefone' => '(81) 98888-2000',
+            'data_nascimento' => '2003-08-08',
+            'cpf' => '741.741.741-11',
+            'nome_mae' => 'Mae Um',
+            'status' => Student::STATUS_PRACTICAL_CLASS,
+            'categoria_pretendida' => 'B',
+        ]);
+        $secondStudent = Student::query()->create([
+            'nome' => 'Aluno Dois',
+            'endereco' => 'Rua I',
+            'telefone' => '(81) 98888-3000',
+            'data_nascimento' => '2004-09-09',
+            'cpf' => '852.852.852-22',
+            'nome_mae' => 'Mae Dois',
+            'status' => Student::STATUS_PRACTICAL_CLASS,
+            'categoria_pretendida' => 'B',
+        ]);
+
+        $this
+            ->actingAs($user)
+            ->post(route('appointments.store'), [
+                'teacher_id' => $teacher->id,
+                'student_id' => $firstStudent->id,
+                'vehicle_id' => $firstVehicle->id,
+                'type' => Appointment::TYPE_LESSON,
+                'slot_date' => '2026-03-23',
+                'slot_time' => '07:00',
+            ])
+            ->assertRedirect();
+
+        $response = $this
+            ->actingAs($user)
+            ->from(route('appointments.index', ['vehicle' => $secondVehicle->id, 'week_start' => '2026-03-23']))
+            ->post(route('appointments.store'), [
+                'teacher_id' => $teacher->id,
+                'student_id' => $secondStudent->id,
+                'vehicle_id' => $secondVehicle->id,
+                'type' => Appointment::TYPE_LESSON,
+                'slot_date' => '2026-03-23',
+                'slot_time' => '07:00',
+            ]);
+
+        $response->assertStatus(422);
+    }
+
+    public function test_weekly_teacher_summary_shows_student_and_vehicle(): void
+    {
+        $user = User::factory()->create();
+        $teacher = Teacher::query()->create([
+            'nome' => 'Professor Resumo',
+            'cpf' => '444.333.222-11',
+            'telefone' => '(81) 96666-4444',
+            'categorias_ensino' => ['B'],
+            'turnos_disponiveis' => ['manha'],
+        ]);
+        $vehicle = Vehicle::query()->create([
+            'placa' => 'ZZZ9Z99',
+            'categoria' => 'B',
+        ]);
+        $student = Student::query()->create([
+            'nome' => 'Aluno Resumo',
+            'endereco' => 'Rua Z',
+            'telefone' => '(81) 91111-9999',
+            'data_nascimento' => '2000-10-10',
+            'cpf' => '963.258.741-55',
+            'nome_mae' => 'Mae Resumo',
+            'status' => Student::STATUS_PRACTICAL_CLASS,
+            'categoria_pretendida' => 'B',
+        ]);
+
+        Appointment::query()->create([
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+            'vehicle_id' => $vehicle->id,
+            'type' => Appointment::TYPE_LESSON,
+            'lesson_category' => 'B',
+            'starts_at' => '2026-03-23 07:00:00',
+            'ends_at' => '2026-03-23 07:50:00',
+        ]);
+
+        $response = $this
+            ->actingAs($user)
+            ->get(route('appointments.index', ['vehicle' => $vehicle->id, 'week_start' => '2026-03-23']));
+
+        $response->assertOk();
+        $response->assertSee('Grade semanal de professores');
+        $response->assertSee('Professor Resumo');
+        $response->assertSee('Aluno Resumo');
+        $response->assertSee('ZZZ9Z99');
     }
 }

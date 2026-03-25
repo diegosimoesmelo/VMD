@@ -34,12 +34,12 @@
             text-decoration: none;
             color: var(--color-secondary);
             background: rgba(255, 255, 255, 0.88);
-            border: 1px solid rgba(20, 33, 61, 0.08);
+            border: 1px solid rgba(var(--color-secondary-rgb), 0.08);
             box-shadow: var(--shadow-card);
             font-weight: 700;
         }
         .student-tab.active {
-            background: linear-gradient(135deg, rgba(217, 119, 6, 0.14), rgba(20, 33, 61, 0.08));
+            background: linear-gradient(135deg, rgba(217, 119, 6, 0.14), rgba(var(--color-secondary-rgb), 0.08));
             border-color: rgba(217, 119, 6, 0.28);
         }
         .student-tab-count {
@@ -49,7 +49,7 @@
             align-items: center;
             justify-content: center;
             border-radius: 999px;
-            background: rgba(20, 33, 61, 0.08);
+            background: rgba(var(--color-secondary-rgb), 0.08);
             font-size: 12px;
         }
         .filter-grid {
@@ -74,7 +74,7 @@
         .record-table td {
             padding: 16px 18px;
             text-align: left;
-            border-bottom: 1px solid rgba(20, 33, 61, 0.08);
+            border-bottom: 1px solid rgba(var(--color-secondary-rgb), 0.08);
             vertical-align: top;
         }
         .record-table th {
@@ -107,7 +107,7 @@
             font-weight: 700;
         }
         .teacher-badge {
-            background: rgba(20, 33, 61, 0.08);
+            background: rgba(var(--color-secondary-rgb), 0.08);
             color: var(--color-secondary);
         }
         .teacher-badge.empty {
@@ -139,7 +139,7 @@
             width: 12px;
             height: 12px;
             border-radius: 999px;
-            background: rgba(20, 33, 61, 0.14);
+            background: rgba(var(--color-secondary-rgb), 0.14);
             box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.9);
             flex-shrink: 0;
         }
@@ -159,7 +159,7 @@
             width: 2px;
             height: 18px;
             margin-left: 5px;
-            background: rgba(20, 33, 61, 0.10);
+            background: rgba(var(--color-secondary-rgb), 0.10);
         }
         .status-step.done + .status-step-line {
             background: rgba(22, 163, 74, 0.32);
@@ -185,7 +185,7 @@
             margin: 0;
             padding: 10px 14px;
             border-radius: 12px;
-            border: 1px solid rgba(20, 33, 61, 0.1);
+            border: 1px solid rgba(var(--color-secondary-rgb), 0.1);
             background: rgba(255, 255, 255, 0.92);
             color: var(--color-secondary);
             font: inherit;
@@ -209,10 +209,13 @@
         }
         .timeline-modal-card {
             width: min(560px, 100%);
+            max-height: calc(100vh - 48px);
+            display: flex;
+            flex-direction: column;
             border-radius: 28px;
             background: rgba(255, 255, 255, 0.98);
             box-shadow: var(--shadow-soft);
-            border: 1px solid rgba(20, 33, 61, 0.08);
+            border: 1px solid rgba(var(--color-secondary-rgb), 0.08);
             overflow: hidden;
         }
         .timeline-modal-header,
@@ -225,19 +228,48 @@
             justify-content: space-between;
             gap: 16px;
             align-items: flex-start;
-            border-bottom: 1px solid rgba(20, 33, 61, 0.08);
+            border-bottom: 1px solid rgba(var(--color-secondary-rgb), 0.08);
+            flex-shrink: 0;
+        }
+        .timeline-modal-body {
+            overflow-y: auto;
+            flex: 1 1 auto;
+        }
+        .timeline-modal-footer {
+            flex-shrink: 0;
         }
         .timeline-modal-title {
             margin: 0 0 6px;
             font-size: 22px;
             color: var(--color-secondary);
         }
+        .schedule-list {
+            display: grid;
+            gap: 12px;
+        }
+        .schedule-item {
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: rgba(var(--color-secondary-rgb), 0.04);
+            border: 1px solid rgba(var(--color-secondary-rgb), 0.08);
+        }
+        .schedule-item strong {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--color-secondary);
+        }
+        .schedule-empty {
+            padding: 18px;
+            border-radius: 18px;
+            background: rgba(var(--color-secondary-rgb), 0.04);
+            color: var(--color-muted-text);
+        }
         .timeline-close {
             width: 40px;
             height: 40px;
             border-radius: 999px;
             border: 0;
-            background: rgba(20, 33, 61, 0.08);
+            background: rgba(var(--color-secondary-rgb), 0.08);
             color: var(--color-secondary);
             cursor: pointer;
             font-size: 20px;
@@ -246,7 +278,7 @@
         .timeline-modal-footer {
             display: flex;
             justify-content: flex-end;
-            border-top: 1px solid rgba(20, 33, 61, 0.08);
+            border-top: 1px solid rgba(var(--color-secondary-rgb), 0.08);
         }
         @media (max-width: 1100px) {
             .filter-grid {
@@ -415,6 +447,9 @@
                                 <td>
                                     <div class="action-stack">
                                         <a class="btn-secondary" href="{{ route('students.edit', $student) }}">Editar</a>
+                                        <button class="modal-trigger" type="button" data-modal-target="appointments-modal-{{ $student->id }}">
+                                            Ver aulas
+                                        </button>
                                         @if ($student->nextStatus())
                                             <form class="inline-form" method="POST" action="{{ route('students.advance-status', $student) }}">
                                                 @csrf
@@ -455,6 +490,42 @@
                                                         @endif
                                                     @endforeach
                                                 </div>
+                                            </div>
+                                            <div class="timeline-modal-footer">
+                                                <button class="btn-secondary" type="button" data-modal-close>Fechar</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="timeline-modal" id="appointments-modal-{{ $student->id }}" aria-hidden="true">
+                                        <div class="timeline-modal-card" role="dialog" aria-modal="true" aria-labelledby="appointments-modal-title-{{ $student->id }}">
+                                            <div class="timeline-modal-header">
+                                                <div>
+                                                    <h2 class="timeline-modal-title" id="appointments-modal-title-{{ $student->id }}">{{ $student->nome }}</h2>
+                                                    <p>Aulas e horarios ja marcados para este aluno.</p>
+                                                </div>
+                                                <button class="timeline-close" type="button" data-modal-close aria-label="Fechar">&times;</button>
+                                            </div>
+                                            <div class="timeline-modal-body">
+                                                @if ($student->appointments->isEmpty())
+                                                    <div class="schedule-empty">Nenhuma aula marcada para este aluno ate o momento.</div>
+                                                @else
+                                                    <div class="schedule-list">
+                                                        @foreach ($student->appointments as $appointment)
+                                                            <div class="schedule-item">
+                                                                <strong>{{ $appointment->starts_at?->format('d/m/Y') }} as {{ $appointment->starts_at?->format('H:i') }}</strong>
+                                                                <div>Professor: {{ $appointment->teacher?->nome ?: '-' }}</div>
+                                                                <div>Veiculo: {{ $appointment->vehicle ? strtoupper($appointment->vehicle->placa) : '-' }}</div>
+                                                                @if ($appointment->lesson_category)
+                                                                    <div>Categoria da aula: {{ $appointment->lesson_category }}</div>
+                                                                @endif
+                                                                @if ($appointment->notes)
+                                                                    <div>Observacoes: {{ $appointment->notes }}</div>
+                                                                @endif
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                @endif
                                             </div>
                                             <div class="timeline-modal-footer">
                                                 <button class="btn-secondary" type="button" data-modal-close>Fechar</button>

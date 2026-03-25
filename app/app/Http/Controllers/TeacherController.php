@@ -27,6 +27,7 @@ class TeacherController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate($this->rules());
+        $validated['status_agendamento'] = $validated['status_agendamento'] ?? Teacher::STATUS_AVAILABLE;
 
         Teacher::create($validated);
 
@@ -43,6 +44,7 @@ class TeacherController extends Controller
     public function update(Request $request, Teacher $teacher): RedirectResponse
     {
         $validated = $request->validate($this->rules($teacher));
+        $validated['status_agendamento'] = $validated['status_agendamento'] ?? Teacher::STATUS_AVAILABLE;
 
         $teacher->update($validated);
 
@@ -69,6 +71,7 @@ class TeacherController extends Controller
             'categorias_ensino.*' => ['required', 'string', Rule::in(Teacher::categoryOptions())],
             'turnos_disponiveis' => ['required', 'array', 'min:1'],
             'turnos_disponiveis.*' => ['required', 'string', Rule::in(array_keys(Teacher::shiftOptions()))],
+            'status_agendamento' => ['nullable', 'string', Rule::in(array_keys(Teacher::schedulingStatusOptions()))],
         ];
     }
 }

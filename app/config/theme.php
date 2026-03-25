@@ -3,12 +3,12 @@
 return [
     'colors' => [
         'primary' => '#d97706',
-        'secondary' => '#14213d',
-        'tertiary' => '#d8dee9',
-        'background' => '#f4efe7',
+        'secondary' => '#16352b',
+        'tertiary' => '#d6e1da',
+        'background' => '#eef2ec',
         'surface' => '#ffffff',
-        'text' => '#172033',
-        'muted_text' => '#6b7280',
+        'text' => '#182b23',
+        'muted_text' => '#66756d',
     ],
     'typography' => [
         'font_family' => '"Segoe UI Variable Text", "Segoe UI", sans-serif',

@@ -2,17 +2,17 @@
 
 return [
     'colors' => [
-        'primary' => '#eb8f25ff',
-        'secondary' => '#0f172a',
-        'tertiary' => '#650672ff',
-        'background' => 'rgb(252, 143, 0)',
-        'surface' => '#fdfdfdff',
-        'text' => '#1f2937',
-        'muted_text' => '#64748b',
+        'primary' => '#d97706',
+        'secondary' => '#14213d',
+        'tertiary' => '#d8dee9',
+        'background' => '#f4efe7',
+        'surface' => '#ffffff',
+        'text' => '#172033',
+        'muted_text' => '#6b7280',
     ],
     'typography' => [
-        'font_family' => 'Arial, sans-serif',
-        'base_size' => '14px',
-        'title_size' => '24px',
+        'font_family' => '"Segoe UI Variable Text", "Segoe UI", sans-serif',
+        'base_size' => '15px',
+        'title_size' => '28px',
     ],
 ];

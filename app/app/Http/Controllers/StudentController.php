@@ -11,14 +11,64 @@ use Illuminate\View\View;
 
 class StudentController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $students = Student::query()
-            ->with('teacher')
+        $tab = $request->string('tab')->toString() ?: 'active';
+        $teacherFilter = $request->string('teacher_id')->toString();
+        $teachers = Teacher::query()
             ->orderBy('nome')
             ->get();
 
-        return view('students.index', compact('students'));
+        $baseQuery = Student::query()
+            ->with('teacher')
+            ->orderBy('nome');
+
+        if ($request->filled('search')) {
+            $search = trim((string) $request->string('search'));
+
+            $baseQuery->where(function ($query) use ($search) {
+                $query
+                    ->where('nome', 'like', '%'.$search.'%')
+                    ->orWhere('cpf', 'like', '%'.$search.'%');
+            });
+        }
+
+        if ($teacherFilter !== '') {
+            if ($teacherFilter === 'without_teacher') {
+                $baseQuery->whereNull('teacher_id');
+            } else {
+                $baseQuery->where('teacher_id', (int) $teacherFilter);
+            }
+        }
+
+        $tabCounts = [
+            'active' => (clone $baseQuery)->where('status', '!=', Student::STATUS_FINISHED)->count(),
+            'without_teacher' => (clone $baseQuery)->whereNull('teacher_id')->count(),
+            'finished' => (clone $baseQuery)->where('status', Student::STATUS_FINISHED)->count(),
+        ];
+
+        $studentsQuery = clone $baseQuery;
+
+        if ($tab === 'without_teacher') {
+            $studentsQuery->whereNull('teacher_id');
+        } elseif ($tab === 'finished') {
+            $studentsQuery->where('status', Student::STATUS_FINISHED);
+        } else {
+            $studentsQuery->where('status', '!=', Student::STATUS_FINISHED);
+        }
+
+        $students = $studentsQuery->get();
+
+        return view('students.index', [
+            'students' => $students,
+            'teachers' => $teachers,
+            'tabCounts' => $tabCounts,
+            'filters' => [
+                'tab' => $tab,
+                'search' => $request->string('search')->toString(),
+                'teacher_id' => $teacherFilter,
+            ],
+        ]);
     }
 
     public function create(): View
@@ -63,6 +113,23 @@ class StudentController extends Controller
             ->with('success', 'Dados do aluno atualizados com sucesso.');
     }
 
+    public function advanceStatus(Request $request, Student $student): RedirectResponse
+    {
+        $nextStatus = $student->nextStatus();
+
+        if (! $nextStatus) {
+            return redirect()
+                ->route('students.index', $request->only(['tab', 'search', 'teacher_id']))
+                ->with('success', 'O aluno ja esta na etapa final.');
+        }
+
+        $student->update(['status' => $nextStatus]);
+
+        return redirect()
+            ->route('students.index', $request->only(['tab', 'search', 'teacher_id']))
+            ->with('success', 'Status do aluno atualizado para '.$student->statusLabel().'.');
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -101,6 +168,7 @@ class StudentController extends Controller
             'nome_pai' => ['nullable', 'string', 'max:255'],
             'nome_mae' => ['required', 'string', 'max:255'],
             'teacher_id' => ['nullable', 'integer', 'exists:teachers,id'],
+            'status' => ['required', Rule::in(array_keys(Student::statusOptions()))],
             'servico_oferecido' => ['nullable', 'in:primeira_habilitacao,adicao_categoria,aula_habilitado'],
             'categoria_pretendida' => ['nullable', 'in:A,B,AB'],
             'valor_pago' => ['nullable', 'numeric', 'min:0'],

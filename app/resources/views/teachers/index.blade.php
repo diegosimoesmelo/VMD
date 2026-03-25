@@ -2,101 +2,127 @@
 
 @section('content')
     <style>
-        .toolbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 16px;
-        }
-
-        .table-wrap {
-            overflow-x: auto;
-        }
-
-        table.teachers {
+        .record-table-wrap { overflow-x: auto; }
+        .record-table {
             width: 100%;
-            border-collapse: collapse;
-            font-size: var(--font-size-base);
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 900px;
         }
-
-        table.teachers th,
-        table.teachers td {
-            border: 1px solid var(--color-tertiary);
-            padding: 10px 12px;
+        .record-table th,
+        .record-table td {
+            padding: 16px 18px;
             text-align: left;
+            border-bottom: 1px solid rgba(20, 33, 61, 0.08);
+            vertical-align: middle;
         }
-
-        table.teachers th {
-            background: var(--color-background);
-            color: var(--color-secondary);
-            font-weight: 600;
-        }
-
-        table.teachers tr:nth-child(even) td {
-            background: #fafafa;
-        }
-
-        .btn-sm {
-            border: 0;
-            border-radius: 8px;
-            background: var(--color-primary);
-            color: #fff;
-            padding: 6px 12px;
-            cursor: pointer;
-            font-size: 13px;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .empty {
+        .record-table th {
             color: var(--color-muted-text);
-            padding: 24px 0;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .record-table tbody tr:hover { background: rgba(217, 119, 6, 0.05); }
+        .tag-list {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(20, 33, 61, 0.06);
+            color: var(--color-secondary);
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .record-title {
+            color: var(--color-secondary);
+            font-weight: 700;
+        }
+        .record-subtitle {
+            display: block;
+            margin-top: 4px;
+            color: var(--color-muted-text);
+            font-size: 13px;
         }
     </style>
 
-    <div class="toolbar">
-        <h1 style="margin: 0;">Professores cadastrados</h1>
-        <a class="btn" href="{{ route('teachers.create') }}">Cadastrar professor</a>
+    <div class="page-header">
+        <div class="header-copy">
+            <span class="eyebrow">Modulo de professores</span>
+            <h1>Equipe organizada por categoria e disponibilidade</h1>
+            <p>Visual mais elegante para gerenciar instrutores, turnos disponiveis e categorias ensinadas.</p>
+            <div class="header-stats">
+                <div class="stat-chip">
+                    <strong>{{ $teachers->count() }}</strong>
+                    <span>professores ativos</span>
+                </div>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a class="btn" href="{{ route('teachers.create') }}">Novo professor</a>
+        </div>
     </div>
 
     @if (session('success'))
-        <p style="background: #dcfce7; color: #166534; border: 1px solid #86efac; padding: 10px 12px; border-radius: 8px;">
-            {{ session('success') }}
-        </p>
+        <p class="notice notice-success">{{ session('success') }}</p>
     @endif
 
     @if ($teachers->isEmpty())
-        <p class="empty">Nenhum professor cadastrado ainda.</p>
+        <div class="surface-card empty-state">
+            <strong>Nenhum professor cadastrado ainda.</strong>
+            <p>Cadastre professores para alimentar a distribuicao de aulas e os vinculos com os alunos.</p>
+            <a class="btn" href="{{ route('teachers.create') }}">Cadastrar primeiro professor</a>
+        </div>
     @else
-        <div class="table-wrap">
-            <table class="teachers">
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>CPF</th>
-                        <th>Telefone</th>
-                        <th>Categorias</th>
-                        <th>Turnos</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($teachers as $teacher)
+        <div class="surface-card table-card">
+            <div class="record-table-wrap">
+                <table class="record-table">
+                    <thead>
                         <tr>
-                            <td>{{ $teacher->nome }}</td>
-                            <td>{{ $teacher->cpf }}</td>
-                            <td>{{ $teacher->telefone }}</td>
-                            <td>{{ implode(', ', $teacher->categorias_ensino ?? []) }}</td>
-                            <td>{{ implode(', ', array_map(fn ($shift) => ucfirst($shift), $teacher->turnos_disponiveis ?? [])) }}</td>
-                            <td>
-                                <a class="btn-sm" href="{{ route('teachers.edit', $teacher) }}">Editar</a>
-                            </td>
+                            <th>Nome</th>
+                            <th>CPF</th>
+                            <th>Telefone</th>
+                            <th>Categorias</th>
+                            <th>Turnos</th>
+                            <th></th>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach ($teachers as $teacher)
+                            <tr>
+                                <td>
+                                    <span class="record-title">{{ $teacher->nome }}</span>
+                                    <span class="record-subtitle">Instrutor cadastrado</span>
+                                </td>
+                                <td>{{ $teacher->cpf }}</td>
+                                <td>{{ $teacher->telefone }}</td>
+                                <td>
+                                    <div class="tag-list">
+                                        @foreach ($teacher->categorias_ensino ?? [] as $category)
+                                            <span class="tag">{{ $category }}</span>
+                                        @endforeach
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="tag-list">
+                                        @foreach ($teacher->turnos_disponiveis ?? [] as $shift)
+                                            <span class="tag">{{ ucfirst($shift) }}</span>
+                                        @endforeach
+                                    </div>
+                                </td>
+                                <td>
+                                    <a class="btn-secondary" href="{{ route('teachers.edit', $teacher) }}">Editar</a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
     @endif
 @endsection

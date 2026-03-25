@@ -66,9 +66,9 @@ class TeacherController extends Controller
             ],
             'telefone' => ['required', 'string', 'max:30'],
             'categorias_ensino' => ['required', 'array', 'min:1'],
-            'categorias_ensino.*' => ['required', 'string', Rule::in(['A', 'B', 'C', 'D', 'E', 'AB'])],
+            'categorias_ensino.*' => ['required', 'string', Rule::in(Teacher::categoryOptions())],
             'turnos_disponiveis' => ['required', 'array', 'min:1'],
-            'turnos_disponiveis.*' => ['required', 'string', Rule::in(['manha', 'tarde', 'noite', 'integral'])],
+            'turnos_disponiveis.*' => ['required', 'string', Rule::in(array_keys(Teacher::shiftOptions()))],
         ];
     }
 }

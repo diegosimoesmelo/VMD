@@ -15,6 +15,7 @@ class StudentController extends Controller
     {
         $tab = $request->string('tab')->toString() ?: 'active';
         $teacherFilter = $request->string('teacher_id')->toString();
+        $timelineStatusFilter = $request->string('timeline_status')->toString();
         $teachers = Teacher::query()
             ->orderBy('nome')
             ->get();
@@ -46,6 +47,10 @@ class StudentController extends Controller
             }
         }
 
+        if ($timelineStatusFilter !== '') {
+            $baseQuery->where('status', $timelineStatusFilter);
+        }
+
         $tabCounts = [
             'active' => (clone $baseQuery)->where('status', '!=', Student::STATUS_FINISHED)->count(),
             'without_teacher' => (clone $baseQuery)->whereNull('teacher_id')->count(),
@@ -72,6 +77,7 @@ class StudentController extends Controller
                 'tab' => $tab,
                 'search' => $request->string('search')->toString(),
                 'teacher_id' => $teacherFilter,
+                'timeline_status' => $timelineStatusFilter,
             ],
         ]);
     }
@@ -124,14 +130,14 @@ class StudentController extends Controller
 
         if (! $nextStatus) {
             return redirect()
-                ->route('students.index', $request->only(['tab', 'search', 'teacher_id']))
+                ->route('students.index', $request->only(['tab', 'search', 'teacher_id', 'timeline_status']))
                 ->with('success', 'O aluno ja esta na etapa final.');
         }
 
         $student->update(['status' => $nextStatus]);
 
         return redirect()
-            ->route('students.index', $request->only(['tab', 'search', 'teacher_id']))
+            ->route('students.index', $request->only(['tab', 'search', 'teacher_id', 'timeline_status']))
             ->with('success', 'Status do aluno atualizado para '.$student->statusLabel().'.');
     }
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Appointment;
 use App\Models\Teacher;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Http\RedirectResponse;
@@ -13,6 +14,8 @@ use Illuminate\View\View;
 
 class TeacherController extends Controller
 {
+    private const DEFAULT_PASSWORD = 'vmdcfc';
+
     public function index(Request $request): View
     {
         $weekStart = $request->filled('week_start')
@@ -62,11 +65,12 @@ class TeacherController extends Controller
         $validated = $request->validate($this->rules());
         $validated['status_agendamento'] = $validated['status_agendamento'] ?? Teacher::STATUS_AVAILABLE;
 
-        Teacher::create($validated);
+        $teacher = Teacher::create($validated);
+        $this->syncTeacherUser($teacher, true);
 
         return redirect()
             ->route('teachers.index')
-            ->with('success', 'Professor cadastrado com sucesso.');
+            ->with('success', 'Professor cadastrado com sucesso. Usuario do professor criado com senha inicial: '.self::DEFAULT_PASSWORD);
     }
 
     public function edit(Teacher $teacher): View
@@ -80,6 +84,7 @@ class TeacherController extends Controller
         $validated['status_agendamento'] = $validated['status_agendamento'] ?? Teacher::STATUS_AVAILABLE;
 
         $teacher->update($validated);
+        $this->syncTeacherUser($teacher);
 
         return redirect()
             ->route('teachers.index')
@@ -125,5 +130,37 @@ class TeacherController extends Controller
 
             return [$slot => $days];
         });
+    }
+
+    private function syncTeacherUser(Teacher $teacher, bool $forcePasswordReset = false): void
+    {
+        $username = preg_replace('/\D+/', '', (string) $teacher->cpf) ?: 'professor'.$teacher->id;
+        $user = $teacher->user;
+
+        if (! $user) {
+            User::create([
+                'teacher_id' => $teacher->id,
+                'name' => $teacher->nome,
+                'username' => $username,
+                'role' => User::ROLE_TEACHER,
+                'password' => self::DEFAULT_PASSWORD,
+                'must_change_password' => true,
+            ]);
+
+            return;
+        }
+
+        $payload = [
+            'name' => $teacher->nome,
+            'username' => $username,
+            'role' => User::ROLE_TEACHER,
+        ];
+
+        if ($forcePasswordReset) {
+            $payload['password'] = self::DEFAULT_PASSWORD;
+            $payload['must_change_password'] = true;
+        }
+
+        $user->update($payload);
     }
 }

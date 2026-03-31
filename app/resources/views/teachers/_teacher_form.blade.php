@@ -84,7 +84,7 @@
         <div class="surface-card section-card">
             <div class="section-heading">
                 <h2>Informacoes do professor</h2>
-                <p>Dados de identificacao, categoria ensinada e turno disponivel.</p>
+                <p>Dados de identificacao, categoria ensinada e turno disponivel. Ao salvar, o sistema cria ou atualiza automaticamente o acesso do professor ao painel.</p>
             </div>
 
             <div class="teacher-form-grid">
@@ -141,6 +141,11 @@
                             <option value="{{ $statusValue }}" @selected(($v('status_agendamento') ?: \App\Models\Teacher::STATUS_AVAILABLE) === $statusValue)>{{ $statusLabel }}</option>
                         @endforeach
                     </select>
+                </div>
+                <div class="teacher-field teacher-col-12">
+                    <label>Acesso do professor ao sistema</label>
+                    <input type="text" value="{{ preg_replace('/\D+/', '', (string) $v('cpf')) ?: 'Sera gerado a partir do CPF' }}" readonly>
+                    <p>Login inicial: CPF sem pontuacao. Senha inicial: <strong>vmdcfc</strong>. No primeiro acesso, o professor precisara trocar a senha e vera apenas sua propria tela inicial com resumo semanal.</p>
                 </div>
             </div>
         </div>

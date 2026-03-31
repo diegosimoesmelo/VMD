@@ -21,6 +21,10 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
+                if (Auth::guard($guard)->user()?->requiresPasswordChange()) {
+                    return redirect()->route('password.change.edit');
+                }
+
                 return redirect(RouteServiceProvider::HOME);
             }
         }

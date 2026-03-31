@@ -5,9 +5,10 @@
         $currentTab = $filters['tab'] ?? 'active';
         $search = $filters['search'] ?? '';
         $teacherFilter = $filters['teacher_id'] ?? '';
+        $timelineStatusFilter = $filters['timeline_status'] ?? '';
         $statusFlow = \App\Models\Student::statusFlow();
         $statusLabels = \App\Models\Student::statusOptions();
-        $hasActiveFilters = $search !== '' || $teacherFilter !== '';
+        $hasActiveFilters = $search !== '' || $teacherFilter !== '' || $timelineStatusFilter !== '';
         $activeCount = $tabCounts['active'] ?? 0;
         $withoutTeacherCount = $tabCounts['without_teacher'] ?? 0;
         $finishedCount = $tabCounts['finished'] ?? 0;
@@ -54,7 +55,7 @@
         }
         .filter-grid {
             display: grid;
-            grid-template-columns: 2fr 1fr auto auto;
+            grid-template-columns: 2fr 1fr 1fr auto auto;
             gap: 14px;
             align-items: end;
         }
@@ -258,6 +259,31 @@
             margin-bottom: 6px;
             color: var(--color-secondary);
         }
+        .schedule-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .schedule-status.scheduled {
+            background: rgba(59, 130, 246, 0.12);
+            color: #1d4ed8;
+        }
+        .schedule-status.completed {
+            background: rgba(34, 197, 94, 0.12);
+            color: #166534;
+        }
+        .schedule-status.student-absent {
+            background: rgba(249, 115, 22, 0.14);
+            color: #9a3412;
+        }
+        .schedule-status.vehicle-issue {
+            background: rgba(239, 68, 68, 0.12);
+            color: #991b1b;
+        }
         .schedule-empty {
             padding: 18px;
             border-radius: 18px;
@@ -327,21 +353,21 @@
     <div class="student-tabs">
         <a
             class="student-tab {{ $currentTab === 'active' ? 'active' : '' }}"
-            href="{{ route('students.index', array_filter(['tab' => 'active', 'search' => $search, 'teacher_id' => $teacherFilter], fn ($value) => $value !== '')) }}"
+            href="{{ route('students.index', array_filter(['tab' => 'active', 'search' => $search, 'teacher_id' => $teacherFilter, 'timeline_status' => $timelineStatusFilter], fn ($value) => $value !== '')) }}"
         >
             Alunos ativos
             <span class="student-tab-count">{{ $currentTab === 'active' ? $students->count() : $activeCount }}</span>
         </a>
         <a
             class="student-tab {{ $currentTab === 'without_teacher' ? 'active' : '' }}"
-            href="{{ route('students.index', array_filter(['tab' => 'without_teacher', 'search' => $search, 'teacher_id' => $teacherFilter], fn ($value) => $value !== '')) }}"
+            href="{{ route('students.index', array_filter(['tab' => 'without_teacher', 'search' => $search, 'teacher_id' => $teacherFilter, 'timeline_status' => $timelineStatusFilter], fn ($value) => $value !== '')) }}"
         >
             Sem professor
             <span class="student-tab-count">{{ $currentTab === 'without_teacher' ? $students->count() : $withoutTeacherCount }}</span>
         </a>
         <a
             class="student-tab {{ $currentTab === 'finished' ? 'active' : '' }}"
-            href="{{ route('students.index', array_filter(['tab' => 'finished', 'search' => $search, 'teacher_id' => $teacherFilter], fn ($value) => $value !== '')) }}"
+            href="{{ route('students.index', array_filter(['tab' => 'finished', 'search' => $search, 'teacher_id' => $teacherFilter, 'timeline_status' => $timelineStatusFilter], fn ($value) => $value !== '')) }}"
         >
             Finalizados
             <span class="student-tab-count">{{ $currentTab === 'finished' ? $students->count() : $finishedCount }}</span>
@@ -363,6 +389,15 @@
                         <option value="without_teacher" @selected($teacherFilter === 'without_teacher')>Sem professor</option>
                         @foreach ($teachers as $teacher)
                             <option value="{{ $teacher->id }}" @selected((string) $teacher->id === $teacherFilter)>{{ $teacher->nome }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="timeline_status">Etapa da linha do tempo</label>
+                    <select id="timeline_status" name="timeline_status">
+                        <option value="">Todas</option>
+                        @foreach ($statusLabels as $statusValue => $statusLabel)
+                            <option value="{{ $statusValue }}" @selected($timelineStatusFilter === $statusValue)>{{ $statusLabel }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -456,6 +491,7 @@
                                                 <input type="hidden" name="tab" value="{{ $currentTab }}">
                                                 <input type="hidden" name="search" value="{{ $search }}">
                                                 <input type="hidden" name="teacher_id" value="{{ $teacherFilter }}">
+                                                <input type="hidden" name="timeline_status" value="{{ $timelineStatusFilter }}">
                                                 <button class="btn" type="submit">Avancar etapa</button>
                                             </form>
                                         @endif
@@ -512,12 +548,25 @@
                                                 @else
                                                     <div class="schedule-list">
                                                         @foreach ($student->appointments as $appointment)
+                                                            @php
+                                                                $lessonStatus = $appointment->effectiveLessonStatus();
+                                                                $lessonStatusClass = match ($lessonStatus) {
+                                                                    \App\Models\Appointment::LESSON_STATUS_COMPLETED => 'completed',
+                                                                    \App\Models\Appointment::LESSON_STATUS_STUDENT_ABSENT => 'student-absent',
+                                                                    \App\Models\Appointment::LESSON_STATUS_VEHICLE_ISSUE => 'vehicle-issue',
+                                                                    default => 'scheduled',
+                                                                };
+                                                            @endphp
                                                             <div class="schedule-item">
                                                                 <strong>{{ $appointment->starts_at?->format('d/m/Y') }} as {{ $appointment->starts_at?->format('H:i') }}</strong>
+                                                                <span class="schedule-status {{ $lessonStatusClass }}">{{ $appointment->effectiveLessonStatusLabel() }}</span>
                                                                 <div>Professor: {{ $appointment->teacher?->nome ?: '-' }}</div>
                                                                 <div>Veiculo: {{ $appointment->vehicle ? strtoupper($appointment->vehicle->placa) : '-' }}</div>
                                                                 @if ($appointment->lesson_category)
                                                                     <div>Categoria da aula: {{ $appointment->lesson_category }}</div>
+                                                                @endif
+                                                                @if ($appointment->lesson_status_notes)
+                                                                    <div>Status operacional: {{ $appointment->lesson_status_notes }}</div>
                                                                 @endif
                                                                 @if ($appointment->notes)
                                                                     <div>Observacoes: {{ $appointment->notes }}</div>

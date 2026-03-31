@@ -7,6 +7,7 @@ use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\Vehicle;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -15,64 +16,20 @@ use Illuminate\View\View;
 
 class AppointmentController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|JsonResponse
     {
-        $categoryFilter = $request->string('vehicle_category')->toString();
-        $vehicles = Vehicle::query()
-            ->when($categoryFilter !== '', function ($query) use ($categoryFilter) {
-                $query->where('categoria', $categoryFilter);
-            })
-            ->orderBy('placa')
-            ->get();
+        $viewData = $this->buildIndexViewData($request);
 
-        $selectedVehicle = $this->resolveVehicle($request, $vehicles);
-        $weekStart = $this->resolveWeekStart($request);
-        $weekDays = collect(range(0, 5))
-            ->map(fn (int $offset) => $weekStart->copy()->addDays($offset));
-
-        $students = collect();
-        $teachers = collect();
-        $appointmentsBySlot = collect();
-        if ($selectedVehicle) {
-            $teachers = Teacher::query()
-                ->whereJsonContains('categorias_ensino', $selectedVehicle->categoria)
-                ->where('status_agendamento', Teacher::STATUS_AVAILABLE)
-                ->orderBy('nome')
-                ->get();
-
-            $students = Student::query()
-                ->where('status', '!=', Student::STATUS_FINISHED)
-                ->with('teacher')
-                ->orderBy('nome')
-                ->get();
-
-            $students = $students
-                ->filter(fn (Student $student) => $student->supportsLessonCategory($selectedVehicle->categoria))
-                ->values();
-
-            $appointmentsBySlot = Appointment::query()
-                ->with(['student', 'teacher', 'vehicle'])
-                ->where('vehicle_id', $selectedVehicle->id)
-                ->whereBetween('starts_at', [$weekStart->copy()->startOfDay(), $weekStart->copy()->addDays(5)->endOfDay()])
-                ->get()
-                ->keyBy(fn (Appointment $appointment) => $appointment->starts_at->format('Y-m-d H:i'));
+        if ($request->expectsJson()) {
+            return response()->json([
+                'html' => view('appointments._agenda_content', $viewData)->render(),
+            ]);
         }
 
-        return view('appointments.index', [
-            'vehicles' => $vehicles,
-            'selectedVehicle' => $selectedVehicle,
-            'teachers' => $teachers,
-            'students' => $students,
-            'weekStart' => $weekStart,
-            'weekDays' => $weekDays,
-            'timeSlots' => $this->timeSlots(),
-            'appointmentsBySlot' => $appointmentsBySlot,
-            'vehicleCategoryFilter' => $categoryFilter,
-            'vehicleCategoryOptions' => Vehicle::categoryOptions(),
-        ]);
+        return view('appointments.index', $viewData);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
             'teacher_id' => ['required', 'integer', 'exists:teachers,id'],
@@ -114,7 +71,7 @@ class AppointmentController extends Controller
             'Este professor ja possui um agendamento neste horario.'
         );
 
-        Appointment::updateOrCreate(
+        $appointment = Appointment::updateOrCreate(
             [
                 'vehicle_id' => $vehicle->id,
                 'starts_at' => $startsAt,
@@ -127,7 +84,22 @@ class AppointmentController extends Controller
                 'ends_at' => $endsAt,
                 'notes' => $validated['notes'] ?? null,
             ]
-        );
+        )->load(['student', 'teacher', 'vehicle']);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Agenda atualizada com sucesso.',
+                'slot_html' => $this->renderSlotHtml(
+                    $appointment,
+                    $vehicle,
+                    $startsAt,
+                    $validated['slot_time'],
+                    $this->resolveTeachersForVehicle($vehicle),
+                    $this->resolveStudentsForVehicle($vehicle),
+                    (string) ($validated['vehicle_category'] ?? '')
+                ),
+            ]);
+        }
 
         return redirect()
             ->route('appointments.index', [
@@ -138,17 +110,36 @@ class AppointmentController extends Controller
             ->with('success', 'Agenda atualizada com sucesso.');
     }
 
-    public function destroy(Request $request, Appointment $appointment): RedirectResponse
+    public function destroy(Request $request, Appointment $appointment): RedirectResponse|JsonResponse
     {
         $vehicleId = $appointment->vehicle_id;
+        $vehicle = $appointment->vehicle()->firstOrFail();
+        $slotDate = $appointment->starts_at->copy();
+        $slotTime = $appointment->starts_at->format('H:i');
         $weekStart = $appointment->starts_at->copy()->startOfWeek(Carbon::MONDAY)->toDateString();
+        $vehicleCategory = $request->string('vehicle_category')->toString();
 
         $appointment->delete();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Horario liberado com sucesso.',
+                'slot_html' => $this->renderSlotHtml(
+                    null,
+                    $vehicle,
+                    $slotDate,
+                    $slotTime,
+                    $this->resolveTeachersForVehicle($vehicle),
+                    $this->resolveStudentsForVehicle($vehicle),
+                    $vehicleCategory
+                ),
+            ]);
+        }
 
         return redirect()
             ->route('appointments.index', [
                 'vehicle' => $vehicleId,
-                'vehicle_category' => $request->string('vehicle_category')->toString() ?: null,
+                'vehicle_category' => $vehicleCategory ?: null,
                 'week_start' => $weekStart,
             ])
             ->with('success', 'Horario liberado com sucesso.');
@@ -200,6 +191,108 @@ class AppointmentController extends Controller
         abort_unless($startsAt->dayOfWeekIso >= 1 && $startsAt->dayOfWeekIso <= 6, 422);
 
         return $startsAt;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildIndexViewData(Request $request): array
+    {
+        $categoryFilter = $request->string('vehicle_category')->toString();
+        $vehicles = Vehicle::query()
+            ->when($categoryFilter !== '', function ($query) use ($categoryFilter) {
+                $query->where('categoria', $categoryFilter);
+            })
+            ->orderBy('placa')
+            ->get();
+
+        $selectedVehicle = $this->resolveVehicle($request, $vehicles);
+        $weekStart = $this->resolveWeekStart($request);
+        $weekDays = collect(range(0, 5))
+            ->map(fn (int $offset) => $weekStart->copy()->addDays($offset));
+
+        $students = collect();
+        $teachers = collect();
+        $appointmentsBySlot = collect();
+        if ($selectedVehicle) {
+            $teachers = $this->resolveTeachersForVehicle($selectedVehicle);
+            $students = $this->resolveStudentsForVehicle($selectedVehicle);
+            $appointmentsBySlot = Appointment::query()
+                ->with(['student', 'teacher', 'vehicle'])
+                ->where('vehicle_id', $selectedVehicle->id)
+                ->whereBetween('starts_at', [$weekStart->copy()->startOfDay(), $weekStart->copy()->addDays(5)->endOfDay()])
+                ->get()
+                ->keyBy(fn (Appointment $appointment) => $appointment->starts_at->format('Y-m-d H:i'));
+        }
+
+        return [
+            'vehicles' => $vehicles,
+            'selectedVehicle' => $selectedVehicle,
+            'teachers' => $teachers,
+            'students' => $students,
+            'weekStart' => $weekStart,
+            'weekDays' => $weekDays,
+            'timeSlots' => $this->timeSlots(),
+            'appointmentsBySlot' => $appointmentsBySlot,
+            'vehicleCategoryFilter' => $categoryFilter,
+            'vehicleCategoryOptions' => Vehicle::categoryOptions(),
+            'weekDayLabels' => [
+                1 => 'Segunda-feira',
+                2 => 'Terca-feira',
+                3 => 'Quarta-feira',
+                4 => 'Quinta-feira',
+                5 => 'Sexta-feira',
+                6 => 'Sabado',
+            ],
+            'studentCategoryLabels' => Student::lessonCategoryLabels(),
+        ];
+    }
+
+    /**
+     * @return Collection<int, Teacher>
+     */
+    private function resolveTeachersForVehicle(Vehicle $vehicle): Collection
+    {
+        return Teacher::query()
+            ->whereJsonContains('categorias_ensino', $vehicle->categoria)
+            ->where('status_agendamento', Teacher::STATUS_AVAILABLE)
+            ->orderBy('nome')
+            ->get();
+    }
+
+    /**
+     * @return Collection<int, Student>
+     */
+    private function resolveStudentsForVehicle(Vehicle $vehicle): Collection
+    {
+        return Student::query()
+            ->where('status', '!=', Student::STATUS_FINISHED)
+            ->with('teacher')
+            ->orderBy('nome')
+            ->get()
+            ->filter(fn (Student $student) => $student->supportsLessonCategory($vehicle->categoria))
+            ->values();
+    }
+
+    private function renderSlotHtml(
+        ?Appointment $appointment,
+        Vehicle $vehicle,
+        Carbon $slotDate,
+        string $slotTime,
+        Collection $teachers,
+        Collection $students,
+        string $vehicleCategoryFilter
+    ): string {
+        return view('appointments._slot_cell', [
+            'appointment' => $appointment,
+            'day' => $slotDate->copy(),
+            'slot' => $slotTime,
+            'selectedVehicle' => $vehicle,
+            'teachers' => $teachers,
+            'students' => $students,
+            'vehicleCategoryFilter' => $vehicleCategoryFilter,
+            'studentCategoryLabels' => Student::lessonCategoryLabels(),
+        ])->render();
     }
 
     /**

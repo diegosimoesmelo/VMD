@@ -254,6 +254,74 @@
             border: 1px solid rgba(var(--color-secondary-rgb), 0.08);
             box-shadow: var(--shadow-card);
         }
+        .alert-modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(15, 23, 42, 0.56);
+            backdrop-filter: blur(8px);
+            z-index: 9999;
+        }
+        .alert-modal.is-open {
+            display: flex;
+        }
+        .alert-modal-card {
+            width: min(100%, 520px);
+            border-radius: 28px;
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(239, 68, 68, 0.18);
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+            overflow: hidden;
+        }
+        .alert-modal-header,
+        .alert-modal-body,
+        .alert-modal-footer {
+            padding: 22px 24px;
+        }
+        .alert-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(249, 115, 22, 0.10));
+            border-bottom: 1px solid rgba(239, 68, 68, 0.12);
+        }
+        .alert-modal-card[data-alert-type="warning"] {
+            border-color: rgba(217, 119, 6, 0.18);
+        }
+        .alert-modal-card[data-alert-type="warning"] .alert-modal-header {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.16), rgba(251, 191, 36, 0.10));
+            border-bottom-color: rgba(217, 119, 6, 0.14);
+        }
+        .alert-modal-title {
+            margin: 0;
+            font-size: 22px;
+            color: #991b1b;
+        }
+        .alert-modal-card[data-alert-type="warning"] .alert-modal-title,
+        .alert-modal-card[data-alert-type="warning"] .alert-modal-close {
+            color: #92400e;
+        }
+        .alert-modal-close {
+            border: 0;
+            background: transparent;
+            color: #991b1b;
+            font-size: 28px;
+            line-height: 1;
+            cursor: pointer;
+        }
+        .alert-modal-body p {
+            margin: 0;
+            color: var(--color-text);
+        }
+        .alert-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            border-top: 1px solid rgba(var(--color-secondary-rgb), 0.08);
+        }
         .table-card {
             padding: 12px;
             overflow: hidden;
@@ -308,11 +376,23 @@
     <aside class="sidebar">
         <h2 class="brand">VMD</h2>
         <p class="brand-subtitle">Painel operacional da autoescola com foco em cadastro, acompanhamento e agendamento.</p>
-        <a class="menu-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Inicio</a>
-        <a class="menu-link {{ request()->routeIs('students.index', 'students.create', 'students.edit') ? 'active' : '' }}" href="{{ route('students.index') }}">Alunos</a>
-        <a class="menu-link {{ request()->routeIs('teachers.index', 'teachers.create', 'teachers.edit') ? 'active' : '' }}" href="{{ route('teachers.index') }}">Professores</a>
-        <a class="menu-link {{ request()->routeIs('vehicles.index', 'vehicles.create', 'vehicles.edit') ? 'active' : '' }}" href="{{ route('vehicles.index') }}">Veiculos</a>
-        <a class="menu-link {{ request()->routeIs('appointments.index') ? 'active' : '' }}" href="{{ route('appointments.index') }}">Agendamentos</a>
+        @if (auth()->user()?->requiresPasswordChange())
+            <a class="menu-link {{ request()->routeIs('password.change.*') ? 'active' : '' }}" href="{{ route('password.change.edit') }}">Trocar senha</a>
+        @elseif (auth()->user()?->hasRole(\App\Models\User::ROLE_TEACHER))
+            <a class="menu-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Inicio</a>
+        @else
+            <a class="menu-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Inicio</a>
+            <a class="menu-link {{ request()->routeIs('students.index', 'students.create', 'students.edit') ? 'active' : '' }}" href="{{ route('students.index') }}">Alunos</a>
+            <a class="menu-link {{ request()->routeIs('teachers.index', 'teachers.create', 'teachers.edit') ? 'active' : '' }}" href="{{ route('teachers.index') }}">Professores</a>
+            <a class="menu-link {{ request()->routeIs('vehicles.index', 'vehicles.create', 'vehicles.edit') ? 'active' : '' }}" href="{{ route('vehicles.index') }}">Veiculos</a>
+            <a class="menu-link {{ request()->routeIs('appointments.index') ? 'active' : '' }}" href="{{ route('appointments.index') }}">Agendamentos</a>
+            @if (auth()->user()?->hasRole(\App\Models\User::ROLE_MANAGER, \App\Models\User::ROLE_ADMINISTRATIVE))
+                <a class="menu-link {{ request()->routeIs('lesson-monitoring.index') ? 'active' : '' }}" href="{{ route('lesson-monitoring.index') }}">Controle de aulas</a>
+            @endif
+            @if (auth()->user()?->isManager())
+                <a class="menu-link {{ request()->routeIs('users.index', 'users.create', 'users.edit') ? 'active' : '' }}" href="{{ route('users.index') }}">Usuarios</a>
+            @endif
+        @endif
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button class="logout-btn" type="submit">Sair</button>
@@ -324,5 +404,20 @@
         </section>
     </main>
 </div>
+<div class="alert-modal {{ session('global_alert.message') ? 'is-open' : '' }}" id="global-error-modal" aria-hidden="{{ session('global_alert.message') ? 'false' : 'true' }}">
+    <div class="alert-modal-card" id="global-error-modal-card" data-alert-type="{{ session('global_alert.type', 'error') }}" role="alertdialog" aria-modal="true" aria-labelledby="global-error-modal-title">
+        <div class="alert-modal-header">
+            <h2 class="alert-modal-title" id="global-error-modal-title">{{ session('global_alert.title', 'Erro no sistema') }}</h2>
+            <button class="alert-modal-close" type="button" data-alert-modal-close aria-label="Fechar">&times;</button>
+        </div>
+        <div class="alert-modal-body">
+            <p id="global-error-modal-message">{{ session('global_alert.message') }}</p>
+        </div>
+        <div class="alert-modal-footer">
+            <button class="btn-secondary" type="button" data-alert-modal-close>Fechar</button>
+        </div>
+    </div>
+</div>
+<script src="{{ asset('js/global-error-handler.js') }}"></script>
 </body>
 </html>

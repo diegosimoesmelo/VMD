@@ -1,0 +1,29 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('name')->nullable()->after('id');
+            $table->string('role', 30)->default('gerente')->after('password');
+        });
+
+        DB::table('users')->update([
+            'name' => DB::raw('COALESCE(name, username)'),
+            'role' => DB::raw("COALESCE(role, 'gerente')"),
+        ]);
+    }
+
+    public function down(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn(['name', 'role']);
+        });
+    }
+};

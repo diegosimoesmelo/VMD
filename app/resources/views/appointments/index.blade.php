@@ -14,8 +14,7 @@
     @endphp
 
     <style>
-        .agenda-toolbar,
-        .summary-toolbar {
+        .agenda-toolbar {
             display: flex;
             gap: 14px;
             flex-wrap: wrap;
@@ -126,35 +125,29 @@
             align-items: center;
             margin-bottom: 18px;
         }
-        .agenda-grid-wrap,
-        .summary-grid-wrap {
+        .agenda-grid-wrap {
             overflow-x: auto;
         }
-        .agenda-grid,
-        .summary-grid {
+        .agenda-grid {
             width: 100%;
             min-width: 1120px;
             border-collapse: separate;
             border-spacing: 0;
         }
         .agenda-grid th,
-        .agenda-grid td,
-        .summary-grid th,
-        .summary-grid td {
+        .agenda-grid td {
             padding: 14px;
             border-bottom: 1px solid rgba(var(--color-secondary-rgb), 0.08);
             border-right: 1px solid rgba(var(--color-secondary-rgb), 0.05);
             vertical-align: top;
         }
-        .agenda-grid th,
-        .summary-grid th {
+        .agenda-grid th {
             background: rgba(var(--color-secondary-rgb), 0.04);
             color: var(--color-secondary);
             font-size: 13px;
             font-weight: 700;
         }
-        .agenda-time,
-        .summary-teacher {
+        .agenda-time {
             width: 140px;
             white-space: nowrap;
             font-weight: 700;
@@ -199,8 +192,7 @@
             background: rgba(var(--color-secondary-rgb), 0.10);
             color: var(--color-secondary);
         }
-        .slot-meta strong,
-        .summary-item strong {
+        .slot-meta strong {
             display: block;
             color: var(--color-secondary);
             margin-bottom: 4px;
@@ -228,18 +220,7 @@
             padding: 10px 12px;
             font-size: 13px;
         }
-        .summary-item {
-            padding: 10px 12px;
-            border-radius: 14px;
-            background: rgba(255, 255, 255, 0.88);
-            border: 1px solid rgba(var(--color-secondary-rgb), 0.08);
-            margin-bottom: 10px;
-        }
-        .summary-item:last-child {
-            margin-bottom: 0;
-        }
-        .empty-agenda,
-        .empty-summary {
+        .empty-agenda {
             padding: 32px;
             text-align: center;
         }
@@ -259,10 +240,6 @@
                 <div class="stat-chip">
                     <strong>{{ $vehicles->count() }}</strong>
                     <span>veiculos no filtro</span>
-                </div>
-                <div class="stat-chip">
-                    <strong>{{ $teacherSummary->count() }}</strong>
-                    <span>professores com agenda</span>
                 </div>
             </div>
         </div>
@@ -457,60 +434,4 @@
         @endif
     </div>
 
-    <div class="surface-card section-card">
-        <div class="summary-toolbar">
-            <div>
-                <span class="eyebrow">Resumo por professor</span>
-                <h2>Grade semanal de professores</h2>
-                <p>Veja em qual horario, com qual aluno e com qual veiculo cada professor estara ao longo da semana.</p>
-            </div>
-        </div>
-
-        @if ($teacherSummary->isEmpty())
-            <div class="empty-summary">
-                <strong>Nenhum agendamento encontrado nesta semana.</strong>
-                <p>Preencha a agenda dos veiculos para gerar o resumo semanal dos professores.</p>
-            </div>
-        @else
-            <div class="summary-grid-wrap">
-                <table class="summary-grid">
-                    <thead>
-                        <tr>
-                            <th class="summary-teacher">Professor</th>
-                            @foreach ($weekDays as $day)
-                                <th>{{ $weekDayLabels[$day->dayOfWeekIso] ?? $day->format('d/m') }}<br><span class="muted">{{ $day->format('d/m') }}</span></th>
-                            @endforeach
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($teacherSummary as $item)
-                            <tr>
-                                <td class="summary-teacher">{{ $item['teacher']->nome }}</td>
-                                @foreach ($weekDays as $day)
-                                    @php
-                                        $dayAppointments = $item['days'][$day->toDateString()] ?? collect();
-                                    @endphp
-                                    <td>
-                                        @forelse ($dayAppointments as $appointment)
-                                            <div class="summary-item">
-                                                <strong>{{ $appointment->starts_at->format('H:i') }}</strong>
-                                                <span class="muted">
-                                                    {{ $appointment->student?->nome ?: 'Indisponivel' }}
-                                                    @if ($appointment->vehicle)
-                                                        - {{ strtoupper($appointment->vehicle->placa) }}
-                                                    @endif
-                                                </span>
-                                            </div>
-                                        @empty
-                                            <span class="muted">Sem aulas</span>
-                                        @endforelse
-                                    </td>
-                                @endforeach
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @endif
-    </div>
 @endsection

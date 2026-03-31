@@ -472,7 +472,7 @@ class AppointmentManagementTest extends TestCase
         $response->assertStatus(422);
     }
 
-    public function test_weekly_teacher_summary_shows_student_and_vehicle(): void
+    public function test_vehicle_schedule_no_longer_shows_teacher_summary_section(): void
     {
         $user = User::factory()->create();
         $teacher = Teacher::query()->create([
@@ -512,9 +512,7 @@ class AppointmentManagementTest extends TestCase
             ->get(route('appointments.index', ['vehicle' => $vehicle->id, 'week_start' => '2026-03-23']));
 
         $response->assertOk();
-        $response->assertSee('Grade semanal de professores');
-        $response->assertSee('Professor Resumo');
-        $response->assertSee('Aluno Resumo');
-        $response->assertSee('ZZZ9Z99');
+        $response->assertDontSee('Grade semanal de professores');
+        $response->assertDontSee('Resumo por professor');
     }
 }

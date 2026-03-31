@@ -33,8 +33,6 @@ class AppointmentController extends Controller
         $students = collect();
         $teachers = collect();
         $appointmentsBySlot = collect();
-        $teacherSummary = collect();
-
         if ($selectedVehicle) {
             $teachers = Teacher::query()
                 ->whereJsonContains('categorias_ensino', $selectedVehicle->categoria)
@@ -60,8 +58,6 @@ class AppointmentController extends Controller
                 ->keyBy(fn (Appointment $appointment) => $appointment->starts_at->format('Y-m-d H:i'));
         }
 
-        $teacherSummary = $this->teacherSummary($weekStart, $weekDays);
-
         return view('appointments.index', [
             'vehicles' => $vehicles,
             'selectedVehicle' => $selectedVehicle,
@@ -73,7 +69,6 @@ class AppointmentController extends Controller
             'appointmentsBySlot' => $appointmentsBySlot,
             'vehicleCategoryFilter' => $categoryFilter,
             'vehicleCategoryOptions' => Vehicle::categoryOptions(),
-            'teacherSummary' => $teacherSummary,
         ]);
     }
 
@@ -258,35 +253,5 @@ class AppointmentController extends Controller
             'student_id' => (int) $student->id,
             'lesson_category' => $vehicle->categoria,
         ];
-    }
-    /**
-     * @return Collection<int, array{teacher: Teacher, days: Collection<string, Collection<int, Appointment>>}>
-     */
-    private function teacherSummary(Carbon $weekStart, Collection $weekDays): Collection
-    {
-        $appointments = Appointment::query()
-            ->with(['teacher', 'student', 'vehicle'])
-            ->whereBetween('starts_at', [$weekStart->copy()->startOfDay(), $weekStart->copy()->addDays(5)->endOfDay()])
-            ->orderBy('starts_at')
-            ->get();
-
-        return $appointments
-            ->groupBy('teacher_id')
-            ->map(function (Collection $teacherAppointments) use ($weekDays) {
-                /** @var Appointment $firstAppointment */
-                $firstAppointment = $teacherAppointments->first();
-
-                return [
-                    'teacher' => $firstAppointment->teacher,
-                    'days' => $weekDays->mapWithKeys(function (Carbon $day) use ($teacherAppointments) {
-                        $items = $teacherAppointments
-                            ->filter(fn (Appointment $appointment) => $appointment->starts_at->isSameDay($day))
-                            ->values();
-
-                        return [$day->toDateString() => $items];
-                    }),
-                ];
-            })
-            ->values();
     }
 }

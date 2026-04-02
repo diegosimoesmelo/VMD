@@ -1,7 +1,17 @@
 @php
     $slotKey = $day->format('Y-m-d').' '.$slot;
     $deleteFormId = 'delete_'.md5($slotKey);
-    $eligibleTeachers = $teachers->filter(fn ($teacher) => $teacher->supportsTimeSlot($slot));
+    $busyTeacherIds = collect($busyTeacherIdsBySlot->get($slotKey, []));
+    $busyStudentIds = collect($busyStudentIdsBySlot->get($slotKey, []));
+    $availableTeachers = $teachers->filter(fn ($teacher) => $teacher->supportsTimeSlot($slot)
+        && (! $busyTeacherIds->contains($teacher->id) || $appointment?->teacher_id === $teacher->id)
+    );
+    $availableStudents = $students->filter(fn ($student) => ! $busyStudentIds->contains($student->id)
+        || $appointment?->student_id === $student->id
+    );
+    if ($appointment?->student && ! $availableStudents->contains(fn ($student) => $student->id === $appointment->student_id)) {
+        $availableStudents = $availableStudents->push($appointment->student);
+    }
 @endphp
 
 <div class="slot-card {{ $appointment?->type === \App\Models\Appointment::TYPE_LESSON ? 'busy' : '' }} {{ $appointment?->type === \App\Models\Appointment::TYPE_UNAVAILABLE ? 'unavailable' : '' }}">
@@ -43,7 +53,7 @@
 
         <select name="teacher_id" required>
             <option value="">Selecione o professor</option>
-            @foreach ($eligibleTeachers as $teacher)
+            @foreach ($availableTeachers as $teacher)
                 <option value="{{ $teacher->id }}" @selected($appointment?->teacher_id === $teacher->id)>
                     {{ $teacher->nome }}
                 </option>
@@ -52,13 +62,14 @@
 
         <select name="student_id">
             <option value="">Selecione um aluno</option>
-            @foreach ($students as $student)
+            @foreach ($availableStudents as $student)
                 @php
                     $studentTeacherLabel = $student->teacher ? 'professor: '.$student->teacher->nome : 'sem professor';
                     $studentLessonLabel = $studentCategoryLabels[$student->categoria_pretendida] ?? 'Categoria nao informada';
+                    $remainingLessons = $student->remainingLessonsForCategory($selectedVehicle->categoria);
                 @endphp
                 <option value="{{ $student->id }}" @selected($appointment?->student_id === $student->id)>
-                    {{ $student->nome }} - {{ $studentLessonLabel }} - {{ $studentTeacherLabel }}
+                    {{ $student->nome }} - {{ $studentLessonLabel }} - restam {{ $remainingLessons ?? 0 }} aulas {{ $selectedVehicle->categoria }} - {{ $studentTeacherLabel }}
                 </option>
             @endforeach
         </select>

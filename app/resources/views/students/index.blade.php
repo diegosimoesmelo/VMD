@@ -248,6 +248,29 @@
             display: grid;
             gap: 12px;
         }
+        .lesson-balance-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+        .lesson-balance-card {
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: rgba(217, 119, 6, 0.08);
+            border: 1px solid rgba(217, 119, 6, 0.16);
+        }
+        .lesson-balance-card strong {
+            display: block;
+            color: var(--color-secondary);
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+        .lesson-balance-card span {
+            color: var(--color-muted-text);
+            font-size: 13px;
+            font-weight: 600;
+        }
         .schedule-item {
             padding: 14px 16px;
             border-radius: 18px;
@@ -309,6 +332,9 @@
         @media (max-width: 1100px) {
             .filter-grid {
                 grid-template-columns: 1fr;
+            }
+            .lesson-balance-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
     </style>
@@ -543,6 +569,24 @@
                                                 <button class="timeline-close" type="button" data-modal-close aria-label="Fechar">&times;</button>
                                             </div>
                                             <div class="timeline-modal-body">
+                                                <div class="lesson-balance-grid">
+                                                    <div class="lesson-balance-card">
+                                                        <strong>{{ $student->quantidade_aulas_a_contratadas ?? 0 }}</strong>
+                                                        <span>Aulas A contratadas</span>
+                                                    </div>
+                                                    <div class="lesson-balance-card">
+                                                        <strong>{{ $student->quantidade_aulas_a_restantes ?? ($student->quantidade_aulas_a_contratadas ?? 0) }}</strong>
+                                                        <span>Aulas A restantes</span>
+                                                    </div>
+                                                    <div class="lesson-balance-card">
+                                                        <strong>{{ $student->quantidade_aulas_b_contratadas ?? 0 }}</strong>
+                                                        <span>Aulas B contratadas</span>
+                                                    </div>
+                                                    <div class="lesson-balance-card">
+                                                        <strong>{{ $student->quantidade_aulas_b_restantes ?? ($student->quantidade_aulas_b_contratadas ?? 0) }}</strong>
+                                                        <span>Aulas B restantes</span>
+                                                    </div>
+                                                </div>
                                                 @if ($student->appointments->isEmpty())
                                                     <div class="schedule-empty">Nenhuma aula marcada para este aluno ate o momento.</div>
                                                 @else

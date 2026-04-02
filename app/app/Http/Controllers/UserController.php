@@ -77,6 +77,8 @@ class UserController extends Controller
      */
     private function rules(?User $user = null): array
     {
+        $roleOptions = User::administrativeRoleOptions();
+
         return [
             'name' => ['required', 'string', 'max:255'],
             'username' => [
@@ -85,7 +87,7 @@ class UserController extends Controller
                 'max:255',
                 Rule::unique('users', 'username')->ignore($user?->id),
             ],
-            'role' => ['required', 'string', Rule::in(array_keys(User::manageableRoleOptions()))],
+            'role' => ['required', 'string', Rule::in(array_keys($roleOptions))],
         ];
     }
 }

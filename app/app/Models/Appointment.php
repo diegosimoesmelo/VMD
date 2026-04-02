@@ -102,4 +102,21 @@ class Appointment extends Model
 
         return self::effectiveLessonStatusLabels()[$status] ?? $status;
     }
+
+    public function countsAsConsumedLesson(?CarbonInterface $reference = null): bool
+    {
+        if ($this->type !== self::TYPE_LESSON) {
+            return false;
+        }
+
+        return in_array(
+            $this->effectiveLessonStatus($reference),
+            [
+                self::LESSON_STATUS_SCHEDULED,
+                self::LESSON_STATUS_COMPLETED,
+                self::LESSON_STATUS_STUDENT_ABSENT,
+            ],
+            true
+        );
+    }
 }

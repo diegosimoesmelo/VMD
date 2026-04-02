@@ -56,12 +56,20 @@ class Student extends Model
         'servico_oferecido',
         'categoria_pretendida',
         'valor_pago',
+        'quantidade_aulas_a_contratadas',
+        'quantidade_aulas_b_contratadas',
         'observacao',
     ];
 
     protected $casts = [
         'data_nascimento' => 'date',
         'valor_pago' => 'decimal:2',
+        'quantidade_aulas_contratadas' => 'integer',
+        'quantidade_aulas_restantes' => 'integer',
+        'quantidade_aulas_a_contratadas' => 'integer',
+        'quantidade_aulas_a_restantes' => 'integer',
+        'quantidade_aulas_b_contratadas' => 'integer',
+        'quantidade_aulas_b_restantes' => 'integer',
     ];
 
     public function teacher(): BelongsTo
@@ -145,5 +153,94 @@ class Student extends Model
         }
 
         return $this->categoria_pretendida === $lessonCategory;
+    }
+
+    public function consumedLessonsCount(?string $lessonCategory = null): int
+    {
+        $appointments = $this->relationLoaded('appointments')
+            ? $this->appointments
+            : $this->appointments()->get();
+
+        return $appointments
+            ->filter(function (Appointment $appointment) use ($lessonCategory) {
+                if (! $appointment->countsAsConsumedLesson()) {
+                    return false;
+                }
+
+                if ($lessonCategory === null) {
+                    return true;
+                }
+
+                return $appointment->lesson_category === $lessonCategory;
+            })
+            ->count();
+    }
+
+    public function contractedLessonsForCategory(string $lessonCategory): ?int
+    {
+        return match ($lessonCategory) {
+            'A' => $this->quantidade_aulas_a_contratadas,
+            'B' => $this->quantidade_aulas_b_contratadas,
+            default => null,
+        };
+    }
+
+    public function remainingLessonsForCategory(string $lessonCategory): ?int
+    {
+        return match ($lessonCategory) {
+            'A' => $this->quantidade_aulas_a_restantes,
+            'B' => $this->quantidade_aulas_b_restantes,
+            default => null,
+        };
+    }
+
+    public function calculateRemainingLessonsForCategory(string $lessonCategory): ?int
+    {
+        $contractedLessons = $this->contractedLessonsForCategory($lessonCategory);
+
+        if ($contractedLessons === null) {
+            return null;
+        }
+
+        return max($contractedLessons - $this->consumedLessonsCount($lessonCategory), 0);
+    }
+
+    public function syncRemainingLessons(): void
+    {
+        $remainingLessonsA = $this->calculateRemainingLessonsForCategory('A');
+        $remainingLessonsB = $this->calculateRemainingLessonsForCategory('B');
+        $totalContractedLessons = collect([
+            $this->quantidade_aulas_a_contratadas,
+            $this->quantidade_aulas_b_contratadas,
+        ])->filter(fn ($value) => $value !== null)->sum();
+        $hasAnyContractedLessons = $this->quantidade_aulas_a_contratadas !== null || $this->quantidade_aulas_b_contratadas !== null;
+        $totalRemainingLessons = ($remainingLessonsA ?? 0) + ($remainingLessonsB ?? 0);
+
+        if (
+            $this->quantidade_aulas_a_restantes === $remainingLessonsA
+            && $this->quantidade_aulas_b_restantes === $remainingLessonsB
+            && $this->quantidade_aulas_contratadas === ($hasAnyContractedLessons ? $totalContractedLessons : null)
+            && $this->quantidade_aulas_restantes === ($hasAnyContractedLessons ? $totalRemainingLessons : null)
+        ) {
+            return;
+        }
+
+        $this->forceFill([
+            'quantidade_aulas_a_restantes' => $remainingLessonsA,
+            'quantidade_aulas_b_restantes' => $remainingLessonsB,
+            'quantidade_aulas_contratadas' => $hasAnyContractedLessons ? $totalContractedLessons : null,
+            'quantidade_aulas_restantes' => $hasAnyContractedLessons ? $totalRemainingLessons : null,
+        ])->saveQuietly();
+    }
+
+    public function hasRemainingLessonsForCategory(string $lessonCategory): bool
+    {
+        $remainingLessons = $this->remainingLessonsForCategory($lessonCategory);
+
+        if ($remainingLessons === null) {
+            return false;
+        }
+
+        return $remainingLessons > 0;
     }
 }

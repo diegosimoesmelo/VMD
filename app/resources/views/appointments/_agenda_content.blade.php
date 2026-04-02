@@ -100,6 +100,8 @@
                                         'selectedVehicle' => $selectedVehicle,
                                         'teachers' => $teachers,
                                         'students' => $students,
+                                        'busyTeacherIdsBySlot' => $busyTeacherIdsBySlot,
+                                        'busyStudentIdsBySlot' => $busyStudentIdsBySlot,
                                         'vehicleCategoryFilter' => $vehicleCategoryFilter,
                                         'studentCategoryLabels' => $studentCategoryLabels,
                                     ])

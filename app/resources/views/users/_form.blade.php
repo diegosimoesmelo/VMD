@@ -1,7 +1,7 @@
 @php
     $user = $user ?? null;
     $v = fn (string $key) => old($key, $user?->{$key});
-    $roleOptions = \App\Models\User::manageableRoleOptions();
+    $roleOptions = \App\Models\User::administrativeRoleOptions();
 @endphp
 
 <style>

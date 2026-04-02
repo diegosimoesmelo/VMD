@@ -42,6 +42,8 @@ class LessonMonitoringController extends Controller
         ]);
 
         $appointment->load(['student', 'teacher', 'vehicle']);
+        $appointment->student?->loadMissing('appointments');
+        $appointment->student?->syncRemainingLessons();
 
         if ($request->expectsJson()) {
             return response()->json([

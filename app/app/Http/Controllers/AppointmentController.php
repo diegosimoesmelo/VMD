@@ -46,6 +46,11 @@ class AppointmentController extends Controller
         $teacher = Teacher::findOrFail($validated['teacher_id']);
         $startsAt = $this->resolveSlotDateTime($validated['slot_date'], $validated['slot_time']);
         $endsAt = $startsAt->copy()->addMinutes(50);
+        $existingAppointment = Appointment::query()
+            ->where('vehicle_id', $vehicle->id)
+            ->where('starts_at', $startsAt)
+            ->first();
+        $previousStudentId = $existingAppointment?->student_id;
 
         abort_if(! $teacher->isSchedulable(), 422, 'Este professor nao esta disponivel para aparecer na agenda de veiculos.');
         abort_if(! $teacher->supportsTimeSlot($validated['slot_time']), 422, 'Este horario esta fora do turno disponivel do professor.');
@@ -55,7 +60,8 @@ class AppointmentController extends Controller
                 $validated['student_id'] ?? null,
                 $teacher,
                 $vehicle,
-                $startsAt
+                $startsAt,
+                $existingAppointment
             )
             : ['student_id' => null, 'lesson_category' => null];
 
@@ -85,6 +91,9 @@ class AppointmentController extends Controller
                 'notes' => $validated['notes'] ?? null,
             ]
         )->load(['student', 'teacher', 'vehicle']);
+
+        $this->syncStudentLessonBalance($previousStudentId);
+        $this->syncStudentLessonBalance($appointment->student_id);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -118,8 +127,10 @@ class AppointmentController extends Controller
         $slotTime = $appointment->starts_at->format('H:i');
         $weekStart = $appointment->starts_at->copy()->startOfWeek(Carbon::MONDAY)->toDateString();
         $vehicleCategory = $request->string('vehicle_category')->toString();
+        $studentId = $appointment->student_id;
 
         $appointment->delete();
+        $this->syncStudentLessonBalance($studentId);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -214,6 +225,8 @@ class AppointmentController extends Controller
         $students = collect();
         $teachers = collect();
         $appointmentsBySlot = collect();
+        $busyTeacherIdsBySlot = collect();
+        $busyStudentIdsBySlot = collect();
         if ($selectedVehicle) {
             $teachers = $this->resolveTeachersForVehicle($selectedVehicle);
             $students = $this->resolveStudentsForVehicle($selectedVehicle);
@@ -223,6 +236,8 @@ class AppointmentController extends Controller
                 ->whereBetween('starts_at', [$weekStart->copy()->startOfDay(), $weekStart->copy()->addDays(5)->endOfDay()])
                 ->get()
                 ->keyBy(fn (Appointment $appointment) => $appointment->starts_at->format('Y-m-d H:i'));
+            $busyTeacherIdsBySlot = $this->buildBusyParticipantMap('teacher_id', $teachers->pluck('id'), $weekStart);
+            $busyStudentIdsBySlot = $this->buildBusyParticipantMap('student_id', $students->pluck('id'), $weekStart);
         }
 
         return [
@@ -234,6 +249,8 @@ class AppointmentController extends Controller
             'weekDays' => $weekDays,
             'timeSlots' => $this->timeSlots(),
             'appointmentsBySlot' => $appointmentsBySlot,
+            'busyTeacherIdsBySlot' => $busyTeacherIdsBySlot,
+            'busyStudentIdsBySlot' => $busyStudentIdsBySlot,
             'vehicleCategoryFilter' => $categoryFilter,
             'vehicleCategoryOptions' => Vehicle::categoryOptions(),
             'weekDayLabels' => [
@@ -270,7 +287,9 @@ class AppointmentController extends Controller
             ->with('teacher')
             ->orderBy('nome')
             ->get()
+            ->each->syncRemainingLessons()
             ->filter(fn (Student $student) => $student->supportsLessonCategory($vehicle->categoria))
+            ->filter(fn (Student $student) => $student->hasRemainingLessonsForCategory($vehicle->categoria))
             ->values();
     }
 
@@ -290,15 +309,53 @@ class AppointmentController extends Controller
             'selectedVehicle' => $vehicle,
             'teachers' => $teachers,
             'students' => $students,
+            'busyTeacherIdsBySlot' => collect([
+                $slotDate->copy()->format('Y-m-d').' '.$slotTime => $this->buildBusyParticipantMap('teacher_id', $teachers->pluck('id'), $slotDate->copy()->startOfWeek(Carbon::MONDAY))->get($slotDate->copy()->format('Y-m-d').' '.$slotTime, []),
+            ]),
+            'busyStudentIdsBySlot' => collect([
+                $slotDate->copy()->format('Y-m-d').' '.$slotTime => $this->buildBusyParticipantMap('student_id', $students->pluck('id'), $slotDate->copy()->startOfWeek(Carbon::MONDAY))->get($slotDate->copy()->format('Y-m-d').' '.$slotTime, []),
+            ]),
             'vehicleCategoryFilter' => $vehicleCategoryFilter,
             'studentCategoryLabels' => Student::lessonCategoryLabels(),
         ])->render();
     }
 
     /**
+     * @param Collection<int, int> $participantIds
+     * @return Collection<string, array<int, int>>
+     */
+    private function buildBusyParticipantMap(string $column, Collection $participantIds, Carbon $weekStart): Collection
+    {
+        if ($participantIds->isEmpty()) {
+            return collect();
+        }
+
+        return Appointment::query()
+            ->whereNotNull($column)
+            ->whereIn($column, $participantIds->all())
+            ->whereBetween('starts_at', [$weekStart->copy()->startOfDay(), $weekStart->copy()->addDays(5)->endOfDay()])
+            ->get([$column, 'starts_at'])
+            ->groupBy(fn (Appointment $appointment) => $appointment->starts_at->format('Y-m-d H:i'))
+            ->map(fn (Collection $appointments) => $appointments
+                ->pluck($column)
+                ->filter()
+                ->map(fn ($id) => (int) $id)
+                ->unique()
+                ->values()
+                ->all()
+            );
+    }
+
+    /**
      * @return array{student_id:int, lesson_category:string}
      */
-    private function resolveLessonData(?int $studentId, Teacher $teacher, Vehicle $vehicle, Carbon $startsAt): array
+    private function resolveLessonData(
+        ?int $studentId,
+        Teacher $teacher,
+        Vehicle $vehicle,
+        Carbon $startsAt,
+        ?Appointment $currentAppointment = null
+    ): array
     {
         abort_if(! $studentId, 422, 'Selecione um aluno para marcar a aula.');
 
@@ -326,6 +383,22 @@ class AppointmentController extends Controller
             'A categoria do veiculo nao e compativel com o cadastro do aluno.'
         );
 
+        $student->loadMissing('appointments');
+        $student->syncRemainingLessons();
+
+        $remainingLessons = $student->remainingLessonsForCategory($vehicle->categoria);
+        $isSameReservedLesson = $currentAppointment
+            && (int) $currentAppointment->student_id === (int) $student->id
+            && $currentAppointment->type === Appointment::TYPE_LESSON
+            && $currentAppointment->lesson_category === $vehicle->categoria
+            && $currentAppointment->countsAsConsumedLesson();
+
+        abort_if(
+            ($remainingLessons ?? 0) <= 0 && ! $isSameReservedLesson,
+            422,
+            'Este aluno nao possui mais aulas restantes para a categoria deste veiculo.'
+        );
+
         $vehicleConflict = Appointment::query()
             ->where('vehicle_id', $vehicle->id)
             ->where('starts_at', $startsAt)
@@ -346,5 +419,20 @@ class AppointmentController extends Controller
             'student_id' => (int) $student->id,
             'lesson_category' => $vehicle->categoria,
         ];
+    }
+
+    private function syncStudentLessonBalance(?int $studentId): void
+    {
+        if (! $studentId) {
+            return;
+        }
+
+        $student = Student::query()
+            ->with('appointments')
+            ->find($studentId);
+
+        if ($student) {
+            $student->syncRemainingLessons();
+        }
     }
 }

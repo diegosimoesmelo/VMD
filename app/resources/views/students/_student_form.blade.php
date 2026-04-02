@@ -298,6 +298,30 @@
                         <label for="valor_pago">Valor pago</label>
                         <input id="valor_pago" name="valor_pago" type="number" step="0.01" min="0" placeholder="0,00" value="{{ $v('valor_pago') }}">
                     </div>
+                    <div class="field col-4">
+                        <label for="quantidade_aulas_a_contratadas">Aulas A contratadas</label>
+                        <input
+                            id="quantidade_aulas_a_contratadas"
+                            name="quantidade_aulas_a_contratadas"
+                            type="number"
+                            min="0"
+                            step="1"
+                            placeholder="Ex.: 10"
+                            value="{{ $v('quantidade_aulas_a_contratadas') }}"
+                        >
+                    </div>
+                    <div class="field col-4">
+                        <label for="quantidade_aulas_b_contratadas">Aulas B contratadas</label>
+                        <input
+                            id="quantidade_aulas_b_contratadas"
+                            name="quantidade_aulas_b_contratadas"
+                            type="number"
+                            min="0"
+                            step="1"
+                            placeholder="Ex.: 20"
+                            value="{{ $v('quantidade_aulas_b_contratadas') }}"
+                        >
+                    </div>
                     <div class="field col-12">
                         <label for="observacao">Observacao</label>
                         <textarea id="observacao" name="observacao" placeholder="Escreva observacoes adicionais">{{ $v('observacao') }}</textarea>

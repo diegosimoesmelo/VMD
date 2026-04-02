@@ -68,6 +68,7 @@ class StudentController extends Controller
         }
 
         $students = $studentsQuery->get();
+        $students->each->syncRemainingLessons();
 
         return view('students.index', [
             'students' => $students,
@@ -98,6 +99,7 @@ class StudentController extends Controller
         $student = Student::create($validated);
         $student->matricula = Student::gerarMatricula((int) $student->id);
         $student->save();
+        $student->syncRemainingLessons();
 
         return redirect()
             ->route('students.index')
@@ -118,6 +120,7 @@ class StudentController extends Controller
         $validated = $request->validate($this->rules($student));
 
         $student->update($validated);
+        $student->syncRemainingLessons();
 
         return redirect()
             ->route('students.index')
@@ -183,6 +186,8 @@ class StudentController extends Controller
             'servico_oferecido' => ['nullable', 'in:primeira_habilitacao,adicao_categoria,aula_habilitado'],
             'categoria_pretendida' => ['nullable', 'in:A,B,AB'],
             'valor_pago' => ['nullable', 'numeric', 'min:0'],
+            'quantidade_aulas_a_contratadas' => ['nullable', 'integer', 'min:0'],
+            'quantidade_aulas_b_contratadas' => ['nullable', 'integer', 'min:0'],
             'observacao' => ['nullable', 'string'],
         ];
     }

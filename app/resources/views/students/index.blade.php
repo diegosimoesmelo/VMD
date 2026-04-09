@@ -1,4 +1,4 @@
-@extends('layouts.panel', ['title' => 'Alunos cadastrados'])
+﻿@extends('layouts.panel', ['title' => 'Alunos cadastrados'])
 
 @section('content')
     @php
@@ -13,8 +13,8 @@
         $withoutTeacherCount = $tabCounts['without_teacher'] ?? 0;
         $finishedCount = $tabCounts['finished'] ?? 0;
         $serviceLabels = [
-            'primeira_habilitacao' => 'Primeira habilitacao',
-            'adicao_categoria' => 'Adicao de categoria',
+            'primeira_habilitacao' => 'Primeira habilitação',
+            'adicao_categoria' => 'Adição de categoria',
             'aula_habilitado' => 'Aula para habilitado',
         ];
     @endphp
@@ -341,9 +341,9 @@
 
     <div class="page-header">
         <div class="header-copy">
-            <span class="eyebrow">Modulo de alunos</span>
+            <span class="eyebrow">Módulo de alunos</span>
             <h1>Linha do tempo operacional por aluno</h1>
-            <p>Visualize em que etapa cada aluno esta e avance o status diretamente da listagem para manter o fluxo da autoescola atualizado.</p>
+            <p>Visualize em que etapa cada aluno está e avance o status diretamente da listagem para manter o fluxo da autoescola atualizado.</p>
             <div class="header-stats">
                 <div class="stat-chip">
                     <strong>{{ $students->count() }}</strong>
@@ -351,11 +351,11 @@
                 </div>
                 <div class="stat-chip">
                     <strong>{{ $students->where('status', \App\Models\Student::STATUS_PRACTICAL_CLASS)->count() }}</strong>
-                    <span>em aula pratica</span>
+                    <span>em aula prática</span>
                 </div>
                 <div class="stat-chip">
                     <strong>{{ $students->where('status', \App\Models\Student::STATUS_THEORY_CLASS)->count() }}</strong>
-                    <span>em aula teorica</span>
+                    <span>em aula teórica</span>
                 </div>
             </div>
         </div>
@@ -457,14 +457,14 @@
                 <table class="record-table">
                     <thead>
                         <tr>
-                            <th>Matricula</th>
+                            <th>Matrícula</th>
                             <th>Aluno</th>
                             <th>Professor</th>
                             <th>Estado atual</th>
                             <th>CPF</th>
                             <th>Telefone</th>
                             <th>Categoria</th>
-                            <th>Servico</th>
+                            <th>Serviço</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -518,7 +518,7 @@
                                                 <input type="hidden" name="search" value="{{ $search }}">
                                                 <input type="hidden" name="teacher_id" value="{{ $teacherFilter }}">
                                                 <input type="hidden" name="timeline_status" value="{{ $timelineStatusFilter }}">
-                                                <button class="btn" type="submit">Avancar etapa</button>
+                                                <button class="btn" type="submit">Avançar etapa</button>
                                             </form>
                                         @endif
                                     </div>
@@ -564,7 +564,7 @@
                                             <div class="timeline-modal-header">
                                                 <div>
                                                     <h2 class="timeline-modal-title" id="appointments-modal-title-{{ $student->id }}">{{ $student->nome }}</h2>
-                                                    <p>Aulas e horarios ja marcados para este aluno.</p>
+                                                    <p>Aulas e horários já marcados para este aluno.</p>
                                                 </div>
                                                 <button class="timeline-close" type="button" data-modal-close aria-label="Fechar">&times;</button>
                                             </div>
@@ -588,7 +588,7 @@
                                                     </div>
                                                 </div>
                                                 @if ($student->appointments->isEmpty())
-                                                    <div class="schedule-empty">Nenhuma aula marcada para este aluno ate o momento.</div>
+                                                    <div class="schedule-empty">Nenhuma aula marcada para este aluno até o momento.</div>
                                                 @else
                                                     <div class="schedule-list">
                                                         @foreach ($student->appointments as $appointment)
@@ -605,7 +605,7 @@
                                                                 <strong>{{ $appointment->starts_at?->format('d/m/Y') }} as {{ $appointment->starts_at?->format('H:i') }}</strong>
                                                                 <span class="schedule-status {{ $lessonStatusClass }}">{{ $appointment->effectiveLessonStatusLabel() }}</span>
                                                                 <div>Professor: {{ $appointment->teacher?->nome ?: '-' }}</div>
-                                                                <div>Veiculo: {{ $appointment->vehicle ? strtoupper($appointment->vehicle->placa) : '-' }}</div>
+                                                                <div>Veículo: {{ $appointment->vehicle ? strtoupper($appointment->vehicle->placa) : '-' }}</div>
                                                                 @if ($appointment->lesson_category)
                                                                     <div>Categoria da aula: {{ $appointment->lesson_category }}</div>
                                                                 @endif
@@ -613,7 +613,7 @@
                                                                     <div>Status operacional: {{ $appointment->lesson_status_notes }}</div>
                                                                 @endif
                                                                 @if ($appointment->notes)
-                                                                    <div>Observacoes: {{ $appointment->notes }}</div>
+                                                                    <div>Observações: {{ $appointment->notes }}</div>
                                                                 @endif
                                                             </div>
                                                         @endforeach
@@ -667,3 +667,4 @@
         });
     </script>
 @endsection
+

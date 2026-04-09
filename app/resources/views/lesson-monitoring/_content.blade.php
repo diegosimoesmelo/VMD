@@ -1,8 +1,8 @@
-<div class="surface-card section-card">
+﻿<div class="surface-card section-card">
     <div class="agenda-toolbar">
         <form method="GET" action="{{ route('lesson-monitoring.index') }}" data-lesson-monitoring-filter-form>
             <div class="field-inline">
-                <label for="monitor_vehicle_category">Categoria do veiculo</label>
+                <label for="monitor_vehicle_category">Categoria do veículo</label>
                 <select id="monitor_vehicle_category" name="vehicle_category">
                     <option value="">Todas</option>
                     @foreach ($vehicleCategoryOptions as $value => $label)
@@ -11,7 +11,7 @@
                 </select>
             </div>
             <div class="field-inline">
-                <label for="monitor_vehicle">Veiculo</label>
+                <label for="monitor_vehicle">Veículo</label>
                 <select id="monitor_vehicle" name="vehicle" required>
                     @foreach ($vehicles as $vehicle)
                         <option value="{{ $vehicle->id }}" @selected($selectedVehicle?->id === $vehicle->id)>{{ strtoupper($vehicle->placa) }}</option>
@@ -19,7 +19,7 @@
                 </select>
             </div>
             <div class="field-inline">
-                <label for="monitor_week_start">Semana de referencia</label>
+                <label for="monitor_week_start">Semana de referência</label>
                 <input id="monitor_week_start" name="week_start" type="date" value="{{ $weekStart->toDateString() }}">
             </div>
             <button class="btn" type="submit">Carregar grade</button>
@@ -28,7 +28,7 @@
 
     @if ($selectedVehicle)
         <div class="vehicle-summary">
-            <span class="vehicle-chip">Veiculo {{ strtoupper($selectedVehicle->placa) }}</span>
+            <span class="vehicle-chip">Veículo {{ strtoupper($selectedVehicle->placa) }}</span>
             <span class="vehicle-chip">{{ \App\Models\Vehicle::categoryOptions()[$selectedVehicle->categoria] ?? $selectedVehicle->categoria }}</span>
             <span class="vehicle-chip">Semana {{ $weekStart->format('d/m') }} a {{ $weekStart->copy()->addDays(5)->format('d/m/Y') }}</span>
         </div>
@@ -36,14 +36,14 @@
         <div class="agenda-week-nav">
             <a class="btn-secondary" data-lesson-monitoring-nav href="{{ route('lesson-monitoring.index', ['vehicle' => $selectedVehicle->id, 'vehicle_category' => $vehicleCategoryFilter, 'week_start' => $weekStart->copy()->subWeek()->toDateString()]) }}">Semana anterior</a>
             <span><strong>{{ strtoupper($selectedVehicle->placa) }}</strong> - acompanhamento operacional</span>
-            <a class="btn-secondary" data-lesson-monitoring-nav href="{{ route('lesson-monitoring.index', ['vehicle' => $selectedVehicle->id, 'vehicle_category' => $vehicleCategoryFilter, 'week_start' => $weekStart->copy()->addWeek()->toDateString()]) }}">Proxima semana</a>
+            <a class="btn-secondary" data-lesson-monitoring-nav href="{{ route('lesson-monitoring.index', ['vehicle' => $selectedVehicle->id, 'vehicle_category' => $vehicleCategoryFilter, 'week_start' => $weekStart->copy()->addWeek()->toDateString()]) }}">Próxima semana</a>
         </div>
 
         <div class="agenda-grid-wrap">
             <table class="agenda-grid">
                 <thead>
                     <tr>
-                        <th class="agenda-time">Horario</th>
+                        <th class="agenda-time">Horário</th>
                         @foreach ($weekDays as $day)
                             <th>{{ $weekDayLabels[$day->dayOfWeekIso] ?? $day->format('d/m') }}<br><span class="muted">{{ $day->format('d/m') }}</span></th>
                         @endforeach
@@ -69,8 +69,8 @@
                                         <div class="monitor-slot-card empty">
                                             <span class="monitor-status empty">Sem aula</span>
                                             <div class="monitor-meta">
-                                                <strong>Horario sem movimentacao</strong>
-                                                <span>Nenhum apontamento necessario.</span>
+                                                <strong>Horário sem movimentação</strong>
+                                                <span>Nenhum apontamento necessário.</span>
                                             </div>
                                         </div>
                                     @endif
@@ -83,8 +83,9 @@
         </div>
     @else
         <div class="empty-agenda">
-            <strong>Nenhum veiculo encontrado.</strong>
+            <strong>Nenhum veículo encontrado.</strong>
             <p>Ajuste os filtros para visualizar a grade operacional das aulas.</p>
         </div>
     @endif
 </div>
+

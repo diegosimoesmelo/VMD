@@ -1,4 +1,4 @@
-@extends('layouts.panel', ['title' => 'Professores cadastrados'])
+﻿@extends('layouts.panel', ['title' => 'Professores cadastrados'])
 
 @section('content')
     @php
@@ -8,7 +8,7 @@
             3 => 'Qua',
             4 => 'Qui',
             5 => 'Sex',
-            6 => 'Sab',
+            6 => 'Sáb',
         ];
     @endphp
     <style>
@@ -192,9 +192,9 @@
 
     <div class="page-header">
         <div class="header-copy">
-            <span class="eyebrow">Modulo de professores</span>
+            <span class="eyebrow">Módulo de professores</span>
             <h1>Equipe organizada por categoria e disponibilidade</h1>
-            <p>Visual mais elegante para gerenciar instrutores, turnos disponiveis e categorias ensinadas.</p>
+            <p>Visual mais elegante para gerenciar instrutores, turnos disponíveis e categorias ensinadas.</p>
             <div class="header-stats">
                 <div class="stat-chip">
                     <strong>{{ $teachers->count() }}</strong>
@@ -202,13 +202,13 @@
                 </div>
                 <div class="stat-chip">
                     <strong>{{ $weekStart->format('d/m') }}</strong>
-                    <span>semana ate {{ $weekStart->copy()->addDays(5)->format('d/m') }}</span>
+                    <span>semana até {{ $weekStart->copy()->addDays(5)->format('d/m') }}</span>
                 </div>
             </div>
         </div>
         <div class="header-actions">
             <a class="btn-secondary" href="{{ route('teachers.index', ['week_start' => $weekStart->copy()->subWeek()->toDateString()]) }}">Semana anterior</a>
-            <a class="btn-secondary" href="{{ route('teachers.index', ['week_start' => $weekStart->copy()->addWeek()->toDateString()]) }}">Proxima semana</a>
+            <a class="btn-secondary" href="{{ route('teachers.index', ['week_start' => $weekStart->copy()->addWeek()->toDateString()]) }}">Próxima semana</a>
             <a class="btn" href="{{ route('teachers.create') }}">Novo professor</a>
         </div>
     </div>
@@ -220,7 +220,7 @@
     @if ($teachers->isEmpty())
         <div class="surface-card empty-state">
             <strong>Nenhum professor cadastrado ainda.</strong>
-            <p>Cadastre professores para alimentar a distribuicao de aulas e os vinculos com os alunos.</p>
+            <p>Cadastre professores para alimentar a distribuição de aulas e os vínculos com os alunos.</p>
             <a class="btn" href="{{ route('teachers.create') }}">Cadastrar primeiro professor</a>
         </div>
     @else
@@ -293,7 +293,7 @@
                             <table class="schedule-grid">
                                 <thead>
                                     <tr>
-                                        <th class="schedule-time">Horario</th>
+                                        <th class="schedule-time">Horário</th>
                                         @foreach ($weekDays as $day)
                                             <th>{{ $weekDayLabels[$day->dayOfWeekIso] ?? $day->format('d/m') }}<br><span class="muted">{{ $day->format('d/m') }}</span></th>
                                         @endforeach
@@ -310,9 +310,9 @@
                                                 <td>
                                                     <div class="schedule-cell {{ $appointment ? 'busy' : '' }}">
                                                         @if ($appointment)
-                                                            <strong>{{ $appointment->student?->nome ?: 'Indisponivel' }}</strong>
+                                                            <strong>{{ $appointment->student?->nome ?: 'Indisponível' }}</strong>
                                                             @if ($appointment->vehicle)
-                                                                <div>Veiculo: {{ strtoupper($appointment->vehicle->placa) }}</div>
+                                                                <div>Veículo: {{ strtoupper($appointment->vehicle->placa) }}</div>
                                                             @endif
                                                             @if ($appointment->lesson_category)
                                                                 <div>Aula {{ $appointment->lesson_category }}</div>
@@ -370,3 +370,4 @@
         });
     </script>
 @endsection
+

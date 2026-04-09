@@ -1,11 +1,12 @@
-@extends('layouts.panel', ['title' => 'Editar usuario'])
+﻿@extends('layouts.panel', ['title' => 'Editar usuÃ¡rio'])
 
 @section('content')
     @include('users._form', [
         'formAction' => route('users.update', $user),
         'formMethod' => 'PUT',
         'user' => $user,
-        'submitLabel' => 'Salvar alteracoes',
+        'submitLabel' => 'Salvar alteraÃ§Ãµes',
         'backUrl' => route('users.index'),
     ])
 @endsection
+

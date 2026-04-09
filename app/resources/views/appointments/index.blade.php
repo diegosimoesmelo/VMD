@@ -221,13 +221,13 @@
 
     <div class="page-header">
         <div class="header-copy">
-            <span class="eyebrow">Agenda de veiculos</span>
-            <h1>Planejamento semanal orientado pelo veiculo</h1>
-            <p>O agendamento principal agora usa a grade do veiculo. Em cada slot voce escolhe o professor da aula e acompanha a agenda semanal resumida de cada professor com aluno e veiculo.</p>
+            <span class="eyebrow">Agenda de veículos</span>
+            <h1>Planejamento semanal orientado pelo veículo</h1>
+            <p>O agendamento principal agora usa a grade do veículo. Em cada horário, você escolhe o professor da aula e acompanha a agenda semanal resumida de cada professor com aluno e veículo.</p>
             <div class="header-stats">
                 <div class="stat-chip">
                     <strong>{{ $vehicles->count() }}</strong>
-                    <span>veiculos no filtro</span>
+                    <span>veículos no filtro</span>
                 </div>
             </div>
         </div>

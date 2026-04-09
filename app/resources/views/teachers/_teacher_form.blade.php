@@ -1,4 +1,4 @@
-@php
+﻿@php
     $teacher = $teacher ?? null;
     $v = fn (string $key) => old($key, $teacher?->{$key});
     $selectedCategories = old('categorias_ensino', $teacher?->categorias_ensino ?? []);
@@ -56,7 +56,7 @@
 <div class="form-shell">
     <div class="page-header">
         <div class="header-copy">
-            <span class="eyebrow">{{ $teacher ? 'Atualizacao de professor' : 'Novo cadastro de professor' }}</span>
+            <span class="eyebrow">{{ $teacher ? 'Atualização de professor' : 'Novo cadastro de professor' }}</span>
             <h1>{{ $teacher ? 'Atualize o perfil do instrutor com mais clareza visual' : 'Cadastro de professor com foco em disponibilidade' }}</h1>
             <p>Uma tela mais limpa para manter equipe, categorias e turnos organizados no mesmo lugar.</p>
         </div>
@@ -72,7 +72,7 @@
     @endif
 
     @if ($errors->any())
-        <p class="notice notice-error">Corrija os campos obrigatorios e tente novamente.</p>
+        <p class="notice notice-error">Corrija os campos obrigatórios e tente novamente.</p>
     @endif
 
     <form method="POST" action="{{ $formAction }}">
@@ -83,8 +83,8 @@
 
         <div class="surface-card section-card">
             <div class="section-heading">
-                <h2>Informacoes do professor</h2>
-                <p>Dados de identificacao, categoria ensinada e turno disponivel. Ao salvar, o sistema cria ou atualiza automaticamente o acesso do professor ao painel.</p>
+                <h2>Informações do professor</h2>
+                <p>Dados de identificação, categoria ensinada e turno disponível. Ao salvar, o sistema cria ou atualiza automaticamente o acesso do professor ao painel.</p>
             </div>
 
             <div class="teacher-form-grid">
@@ -118,7 +118,7 @@
                     </div>
                 </div>
                 <div class="teacher-field teacher-col-6">
-                    <label>Turnos disponiveis</label>
+                    <label>Turnos disponíveis</label>
                     <div class="check-grid">
                         @foreach ($shiftOptions as $shiftValue => $shiftLabel)
                             <label class="check-card" for="turno_{{ $shiftValue }}">
@@ -144,8 +144,8 @@
                 </div>
                 <div class="teacher-field teacher-col-12">
                     <label>Acesso do professor ao sistema</label>
-                    <input type="text" value="{{ preg_replace('/\D+/', '', (string) $v('cpf')) ?: 'Sera gerado a partir do CPF' }}" readonly>
-                    <p>Login inicial: CPF sem pontuacao. Senha inicial: <strong>vmdcfc</strong>. No primeiro acesso, o professor precisara trocar a senha e vera apenas sua propria tela inicial com resumo semanal.</p>
+                    <input type="text" value="{{ preg_replace('/\D+/', '', (string) $v('cpf')) ?: 'Será gerado a partir do CPF' }}" readonly>
+                    <p>Login inicial: CPF sem pontuação. Senha inicial: <strong>vmdcfc</strong>. No primeiro acesso, o professor precisará trocar a senha e verá apenas sua própria tela inicial com resumo semanal.</p>
                 </div>
             </div>
         </div>
@@ -158,3 +158,4 @@
         </div>
     </form>
 </div>
+

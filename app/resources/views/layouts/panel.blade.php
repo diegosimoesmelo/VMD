@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -379,18 +379,18 @@
         @if (auth()->user()?->requiresPasswordChange())
             <a class="menu-link {{ request()->routeIs('password.change.*') ? 'active' : '' }}" href="{{ route('password.change.edit') }}">Trocar senha</a>
         @elseif (auth()->user()?->hasRole(\App\Models\User::ROLE_TEACHER))
-            <a class="menu-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Inicio</a>
+            <a class="menu-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Início</a>
         @else
-            <a class="menu-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Inicio</a>
+            <a class="menu-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Início</a>
             <a class="menu-link {{ request()->routeIs('students.index', 'students.create', 'students.edit') ? 'active' : '' }}" href="{{ route('students.index') }}">Alunos</a>
             <a class="menu-link {{ request()->routeIs('teachers.index', 'teachers.create', 'teachers.edit') ? 'active' : '' }}" href="{{ route('teachers.index') }}">Professores</a>
-            <a class="menu-link {{ request()->routeIs('vehicles.index', 'vehicles.create', 'vehicles.edit') ? 'active' : '' }}" href="{{ route('vehicles.index') }}">Veiculos</a>
+            <a class="menu-link {{ request()->routeIs('vehicles.index', 'vehicles.create', 'vehicles.edit') ? 'active' : '' }}" href="{{ route('vehicles.index') }}">Veículos</a>
             <a class="menu-link {{ request()->routeIs('appointments.index') ? 'active' : '' }}" href="{{ route('appointments.index') }}">Agendamentos</a>
             @if (auth()->user()?->hasRole(\App\Models\User::ROLE_MANAGER, \App\Models\User::ROLE_ADMINISTRATIVE))
                 <a class="menu-link {{ request()->routeIs('lesson-monitoring.index') ? 'active' : '' }}" href="{{ route('lesson-monitoring.index') }}">Controle de aulas</a>
             @endif
             @if (auth()->user()?->isManager())
-                <a class="menu-link {{ request()->routeIs('users.index', 'users.create', 'users.edit') ? 'active' : '' }}" href="{{ route('users.index') }}">Usuarios</a>
+                <a class="menu-link {{ request()->routeIs('users.index', 'users.create', 'users.edit') ? 'active' : '' }}" href="{{ route('users.index') }}">Usuários</a>
             @endif
         @endif
         <form method="POST" action="{{ route('logout') }}">
@@ -421,3 +421,4 @@
 <script src="{{ asset('js/global-error-handler.js') }}"></script>
 </body>
 </html>
+

@@ -1,4 +1,4 @@
-@php
+﻿@php
     $student = $student ?? null;
     $teachers = $teachers ?? collect();
     $statusOptions = \App\Models\Student::statusOptions();
@@ -49,9 +49,9 @@
 <div class="form-shell">
     <div class="page-header">
         <div class="header-copy">
-            <span class="eyebrow">{{ $student ? 'Atualizacao de cadastro' : 'Novo cadastro de aluno' }}</span>
+            <span class="eyebrow">{{ $student ? 'Atualização de cadastro' : 'Novo cadastro de aluno' }}</span>
             <h1>{{ $student ? 'Edite os dados do aluno com mais contexto visual' : 'Cadastro de aluno em duas etapas mais claras' }}</h1>
-            <p>Interface mais organizada para reduzir erro de preenchimento e deixar os dados principais mais visiveis.</p>
+            <p>Interface mais organizada para reduzir erro de preenchimento e deixar os dados principais mais visíveis.</p>
         </div>
         <div class="header-actions">
             @if (! empty($backUrl))
@@ -70,7 +70,7 @@
     @endif
 
     @if ($errors->any())
-        <p class="notice notice-error">Corrija os campos obrigatorios e tente novamente.</p>
+        <p class="notice notice-error">Corrija os campos obrigatórios e tente novamente.</p>
     @endif
 
     <form id="studentForm" method="POST" action="{{ $formAction }}">
@@ -83,12 +83,12 @@
             <div class="surface-card section-card">
                 <div class="section-heading">
                     <h2>Dados pessoais</h2>
-                    <p>Informacoes civis e de contato do aluno.</p>
+                    <p>Informações civis e de contato do aluno.</p>
                 </div>
                 <div class="form-grid">
                     @if ($student && $student->matricula)
                         <div class="field col-12">
-                            <label for="matricula_display">Matricula</label>
+                            <label for="matricula_display">Matrícula</label>
                             <input id="matricula_display" type="text" value="{{ $student->matricula }}" readonly>
                         </div>
                     @endif
@@ -97,12 +97,12 @@
                         <input id="nome" name="nome" type="text" placeholder="Digite o nome completo" value="{{ $v('nome') }}" required>
                     </div>
                     <div class="field col-7">
-                        <label for="endereco">Endereco</label>
+                        <label for="endereco">Endereço</label>
                         <input id="endereco" name="endereco" type="text" placeholder="Rua, avenida, etc." value="{{ $v('endereco') }}" required>
                     </div>
                     <div class="field col-2">
-                        <label for="numero">Numero</label>
-                        <input id="numero" name="numero" type="text" placeholder="Numero" value="{{ $v('numero') }}">
+                        <label for="numero">Número</label>
+                        <input id="numero" name="numero" type="text" placeholder="Número" value="{{ $v('numero') }}">
                     </div>
                     <div class="field col-3">
                         <label for="complemento">Complemento</label>
@@ -144,7 +144,7 @@
                             <option value="masculino" @selected($v('sexo') === 'masculino')>Masculino</option>
                             <option value="feminino" @selected($v('sexo') === 'feminino')>Feminino</option>
                             <option value="outro" @selected($v('sexo') === 'outro')>Outro</option>
-                            <option value="nao_informar" @selected($v('sexo') === 'nao_informar')>Prefiro nao informar</option>
+                            <option value="nao_informar" @selected($v('sexo') === 'nao_informar')>Prefiro não informar</option>
                         </select>
                     </div>
                     <div class="field col-5">
@@ -166,10 +166,10 @@
                     </div>
                     <div class="field col-3">
                         <label for="rg">RG</label>
-                        <input id="rg" name="rg" type="text" placeholder="Numero do RG" value="{{ $v('rg') }}">
+                        <input id="rg" name="rg" type="text" placeholder="Número do RG" value="{{ $v('rg') }}">
                     </div>
                     <div class="field col-3">
-                        <label for="orgao_exp">Orgao exp.</label>
+                        <label for="orgao_exp">Órgão exp.</label>
                         <input id="orgao_exp" name="orgao_exp" type="text" placeholder="SSP, DETRAN, etc." value="{{ $v('orgao_exp') }}">
                     </div>
                     <div class="field col-2">
@@ -191,7 +191,7 @@
                             <option value="">Selecione</option>
                             <option value="solteiro" @selected($v('estado_civil') === 'solteiro')>Solteiro(a)</option>
                             <option value="casado" @selected($v('estado_civil') === 'casado')>Casado(a)</option>
-                            <option value="uniao_estavel" @selected($v('estado_civil') === 'uniao_estavel')>Uniao estavel</option>
+                            <option value="uniao_estavel" @selected($v('estado_civil') === 'uniao_estavel')>União estável</option>
                             <option value="divorciado" @selected($v('estado_civil') === 'divorciado')>Divorciado(a)</option>
                             <option value="separado" @selected($v('estado_civil') === 'separado')>Separado(a)</option>
                             <option value="viuvo" @selected($v('estado_civil') === 'viuvo')>Viuvo(a)</option>
@@ -203,12 +203,12 @@
                             <option value="">Selecione</option>
                             <option value="fundamental_incompleto" @selected($v('grau_escolaridade') === 'fundamental_incompleto')>Fundamental incompleto</option>
                             <option value="fundamental_completo" @selected($v('grau_escolaridade') === 'fundamental_completo')>Fundamental completo</option>
-                            <option value="medio_incompleto" @selected($v('grau_escolaridade') === 'medio_incompleto')>Medio incompleto</option>
-                            <option value="medio_completo" @selected($v('grau_escolaridade') === 'medio_completo')>Medio completo</option>
-                            <option value="tecnico" @selected($v('grau_escolaridade') === 'tecnico')>Tecnico</option>
+                            <option value="medio_incompleto" @selected($v('grau_escolaridade') === 'medio_incompleto')>Médio incompleto</option>
+                            <option value="medio_completo" @selected($v('grau_escolaridade') === 'medio_completo')>Médio completo</option>
+                            <option value="tecnico" @selected($v('grau_escolaridade') === 'tecnico')>Técnico</option>
                             <option value="superior_incompleto" @selected($v('grau_escolaridade') === 'superior_incompleto')>Superior incompleto</option>
                             <option value="superior_completo" @selected($v('grau_escolaridade') === 'superior_completo')>Superior completo</option>
-                            <option value="pos_graduacao" @selected($v('grau_escolaridade') === 'pos_graduacao')>Pos-graduacao</option>
+                            <option value="pos_graduacao" @selected($v('grau_escolaridade') === 'pos_graduacao')>Pós-graduação</option>
                             <option value="mestrado" @selected($v('grau_escolaridade') === 'mestrado')>Mestrado</option>
                             <option value="doutorado" @selected($v('grau_escolaridade') === 'doutorado')>Doutorado</option>
                         </select>
@@ -222,7 +222,7 @@
             <div class="surface-card section-card">
                 <div class="section-heading">
                     <h2>Dados profissionais e familiares</h2>
-                    <p>Complementos basicos para concluir a etapa principal.</p>
+                    <p>Complementos básicos para concluir a etapa principal.</p>
                 </div>
                 <div class="form-grid">
                     <div class="field col-5">
@@ -230,8 +230,8 @@
                         <input id="empresa" name="empresa" type="text" placeholder="Nome da empresa" value="{{ $v('empresa') }}">
                     </div>
                     <div class="field col-4">
-                        <label for="profissao">Profissao</label>
-                        <input id="profissao" name="profissao" type="text" placeholder="Profissao" value="{{ $v('profissao') }}">
+                        <label for="profissao">Profissão</label>
+                        <input id="profissao" name="profissao" type="text" placeholder="Profissão" value="{{ $v('profissao') }}">
                     </div>
                     <div class="field col-3">
                         <label for="telefone_profissional">Telefone profissional</label>
@@ -242,13 +242,13 @@
                         <input id="nome_pai" name="nome_pai" type="text" placeholder="Nome do pai" value="{{ $v('nome_pai') }}">
                     </div>
                     <div class="field col-6">
-                        <label for="nome_mae">Mae</label>
-                        <input id="nome_mae" name="nome_mae" type="text" placeholder="Nome da mae" value="{{ $v('nome_mae') }}" required>
+                        <label for="nome_mae">Mãe</label>
+                        <input id="nome_mae" name="nome_mae" type="text" placeholder="Nome da mãe" value="{{ $v('nome_mae') }}" required>
                     </div>
                 </div>
             </div>
             <div class="actions">
-                <button class="btn" type="button" onclick="goToStep2()">Proxima etapa</button>
+                <button class="btn" type="button" onclick="goToStep2()">Próxima etapa</button>
             </div>
         </div>
 
@@ -256,11 +256,11 @@
             <div class="surface-card section-card">
                 <div class="section-heading">
                     <h2>Complementos adicionais</h2>
-                    <p>Defina professor responsavel, servico contratado e observacoes finais.</p>
+                    <p>Defina professor responsável, serviço contratado e observações finais.</p>
                 </div>
                 <div class="form-grid">
                     <div class="field col-4">
-                        <label for="teacher_id">Professor responsavel</label>
+                        <label for="teacher_id">Professor responsável</label>
                         <select id="teacher_id" name="teacher_id">
                             <option value="">Selecione um professor</option>
                             @foreach ($teachers as $teacher)
@@ -277,11 +277,11 @@
                         </select>
                     </div>
                     <div class="field col-4">
-                        <label for="servico_oferecido">Servico oferecido</label>
+                        <label for="servico_oferecido">Serviço oferecido</label>
                         <select id="servico_oferecido" name="servico_oferecido">
                             <option value="">Selecione</option>
-                            <option value="primeira_habilitacao" @selected($v('servico_oferecido') === 'primeira_habilitacao')>Primeira habilitacao</option>
-                            <option value="adicao_categoria" @selected($v('servico_oferecido') === 'adicao_categoria')>Adicao de categoria</option>
+                            <option value="primeira_habilitacao" @selected($v('servico_oferecido') === 'primeira_habilitacao')>Primeira habilitação</option>
+                            <option value="adicao_categoria" @selected($v('servico_oferecido') === 'adicao_categoria')>Adição de categoria</option>
                             <option value="aula_habilitado" @selected($v('servico_oferecido') === 'aula_habilitado')>Aula para habilitado</option>
                         </select>
                     </div>
@@ -323,8 +323,8 @@
                         >
                     </div>
                     <div class="field col-12">
-                        <label for="observacao">Observacao</label>
-                        <textarea id="observacao" name="observacao" placeholder="Escreva observacoes adicionais">{{ $v('observacao') }}</textarea>
+                        <label for="observacao">Observação</label>
+                        <textarea id="observacao" name="observacao" placeholder="Escreva observações adicionais">{{ $v('observacao') }}</textarea>
                     </div>
                 </div>
             </div>
@@ -340,3 +340,5 @@
 </div>
 
 <script src="{{ asset('js/student-form.js') }}"></script>
+
+

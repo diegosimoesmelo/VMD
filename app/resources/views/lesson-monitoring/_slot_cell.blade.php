@@ -1,4 +1,4 @@
-@php
+﻿@php
     $effectiveStatus = $appointment->effectiveLessonStatus();
     $statusClass = match ($effectiveStatus) {
         \App\Models\Appointment::LESSON_STATUS_COMPLETED => 'completed',
@@ -12,9 +12,9 @@
     @if ($appointment->type === \App\Models\Appointment::TYPE_LESSON)
         <span class="monitor-status {{ $statusClass }}">{{ $appointment->effectiveLessonStatusLabel() }}</span>
         <div class="monitor-meta">
-            <strong>{{ $appointment->student?->nome ?: 'Aluno nao informado' }}</strong>
-            <span>{{ $appointment->teacher?->nome ?: 'Professor nao informado' }}</span>
-            <span>Veiculo {{ strtoupper($appointment->vehicle?->placa ?? '') }}</span>
+            <strong>{{ $appointment->student?->nome ?: 'Aluno não informado' }}</strong>
+            <span>{{ $appointment->teacher?->nome ?: 'Professor não informado' }}</span>
+            <span>Veículo {{ strtoupper($appointment->vehicle?->placa ?? '') }}</span>
         </div>
 
         <form class="lesson-monitoring-form" method="POST" action="{{ route('lesson-monitoring.update', $appointment) }}">
@@ -29,7 +29,7 @@
                 @endforeach
             </select>
 
-            <label for="lesson_status_notes_{{ $appointment->id }}">Observacao operacional</label>
+            <label for="lesson_status_notes_{{ $appointment->id }}">Observação operacional</label>
             <textarea id="lesson_status_notes_{{ $appointment->id }}" name="lesson_status_notes" placeholder="Detalhes do ocorrido">{{ $appointment->lesson_status_notes }}</textarea>
 
             <div class="monitor-actions">
@@ -37,10 +37,11 @@
             </div>
         </form>
     @elseif ($appointment->type === \App\Models\Appointment::TYPE_UNAVAILABLE)
-        <span class="monitor-status unavailable">Indisponivel</span>
+        <span class="monitor-status unavailable">Indisponível</span>
         <div class="monitor-meta">
-            <strong>Veiculo bloqueado neste horario</strong>
+            <strong>Veículo bloqueado neste horário</strong>
             <span>Sem aula para acompanhamento.</span>
         </div>
     @endif
 </div>
+

@@ -17,10 +17,10 @@
 <div class="slot-card {{ $appointment?->type === \App\Models\Appointment::TYPE_LESSON ? 'busy' : '' }} {{ $appointment?->type === \App\Models\Appointment::TYPE_UNAVAILABLE ? 'unavailable' : '' }}">
     @if ($appointment)
         <span class="slot-status {{ $appointment->type === \App\Models\Appointment::TYPE_LESSON ? 'lesson' : 'unavailable' }}">
-            {{ $appointment->type === \App\Models\Appointment::TYPE_LESSON ? 'Aula marcada' : 'Indisponivel' }}
+            {{ $appointment->type === \App\Models\Appointment::TYPE_LESSON ? 'Aula marcada' : 'Indisponível' }}
         </span>
         <div class="slot-meta">
-            <strong>{{ $appointment->teacher?->nome ?: 'Professor nao informado' }}</strong>
+            <strong>{{ $appointment->teacher?->nome ?: 'Professor não informado' }}</strong>
             @if ($appointment->student)
                 <span class="muted">
                     {{ $appointment->student->nome }}
@@ -29,14 +29,14 @@
                     @endif
                 </span>
             @else
-                <span class="muted">Veiculo indisponivel</span>
+                <span class="muted">Veículo indisponível</span>
             @endif
         </div>
         @if ($appointment->notes)
             <p>{{ $appointment->notes }}</p>
         @endif
     @else
-        <span class="slot-status free">Horario livre</span>
+        <span class="slot-status free">Horário livre</span>
     @endif
 
     <form class="slot-form" method="POST" action="{{ route('appointments.store') }}">
@@ -65,7 +65,7 @@
             @foreach ($availableStudents as $student)
                 @php
                     $studentTeacherLabel = $student->teacher ? 'professor: '.$student->teacher->nome : 'sem professor';
-                    $studentLessonLabel = $studentCategoryLabels[$student->categoria_pretendida] ?? 'Categoria nao informada';
+                    $studentLessonLabel = $studentCategoryLabels[$student->categoria_pretendida] ?? 'Categoria não informada';
                     $remainingLessons = $student->remainingLessonsForCategory($selectedVehicle->categoria);
                 @endphp
                 <option value="{{ $student->id }}" @selected($appointment?->student_id === $student->id)>
@@ -74,7 +74,7 @@
             @endforeach
         </select>
 
-        <textarea name="notes" placeholder="Observacoes do horario">{{ $appointment?->notes }}</textarea>
+        <textarea name="notes" placeholder="Observações do horário">{{ $appointment?->notes }}</textarea>
 
         <div class="slot-actions">
             <button class="btn" type="submit">{{ $appointment ? 'Atualizar' : 'Salvar' }}</button>

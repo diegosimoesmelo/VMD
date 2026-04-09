@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -37,8 +37,9 @@
 <body>
     <div class="card">
         <h1>Esqueci a senha</h1>
-        <p>Fluxo de recuperacao de senha sera implementado na proxima etapa.</p>
+        <p>Fluxo de recuperação de senha será implementado na próxima etapa.</p>
         <p><a href="{{ route('login') }}">Voltar para login</a></p>
     </div>
 </body>
 </html>
+

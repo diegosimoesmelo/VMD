@@ -1,4 +1,4 @@
-@extends('layouts.panel', ['title' => 'Veiculos cadastrados'])
+﻿@extends('layouts.panel', ['title' => 'Veículos cadastrados'])
 
 @section('content')
     <style>
@@ -48,18 +48,18 @@
 
     <div class="page-header">
         <div class="header-copy">
-            <span class="eyebrow">Modulo de veiculos</span>
+            <span class="eyebrow">Módulo de veículos</span>
             <h1>Frota organizada por placa e categoria</h1>
-            <p>Cadastre os veiculos da autoescola para controlar placa, categoria e uso compartilhado na agenda.</p>
+            <p>Cadastre os veículos da autoescola para controlar placa, categoria e uso compartilhado na agenda.</p>
             <div class="header-stats">
                 <div class="stat-chip">
                     <strong>{{ $vehicles->count() }}</strong>
-                    <span>veiculos cadastrados</span>
+                    <span>veículos cadastrados</span>
                 </div>
             </div>
         </div>
         <div class="header-actions">
-            <a class="btn" href="{{ route('vehicles.create') }}">Novo veiculo</a>
+            <a class="btn" href="{{ route('vehicles.create') }}">Novo veículo</a>
         </div>
     </div>
 
@@ -69,9 +69,9 @@
 
     @if ($vehicles->isEmpty())
         <div class="surface-card empty-state">
-            <strong>Nenhum veiculo cadastrado ainda.</strong>
-            <p>Cadastre a frota para vincular os agendamentos ao veiculo correto e evitar conflitos de horario.</p>
-            <a class="btn" href="{{ route('vehicles.create') }}">Cadastrar primeiro veiculo</a>
+            <strong>Nenhum veículo cadastrado ainda.</strong>
+            <p>Cadastre a frota para vincular os agendamentos ao veículo correto e evitar conflitos de horário.</p>
+            <a class="btn" href="{{ route('vehicles.create') }}">Cadastrar primeiro veículo</a>
         </div>
     @else
         <div class="surface-card table-card">
@@ -89,7 +89,7 @@
                             <tr>
                                 <td>
                                     <span class="record-title">{{ strtoupper($vehicle->placa) }}</span>
-                                    <span class="record-subtitle">Veiculo operacional</span>
+                                    <span class="record-subtitle">Veículo operacional</span>
                                 </td>
                                 <td>
                                     <span class="tag">{{ \App\Models\Vehicle::categoryOptions()[$vehicle->categoria] ?? $vehicle->categoria }}</span>
@@ -105,3 +105,5 @@
         </div>
     @endif
 @endsection
+
+

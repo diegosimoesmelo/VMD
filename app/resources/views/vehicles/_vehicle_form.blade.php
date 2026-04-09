@@ -1,4 +1,4 @@
-@php
+﻿@php
     $vehicle = $vehicle ?? null;
     $v = fn (string $key) => old($key, $vehicle?->{$key});
     $categoryOptions = \App\Models\Vehicle::categoryOptions();
@@ -33,9 +33,9 @@
 <div class="form-shell">
     <div class="page-header">
         <div class="header-copy">
-            <span class="eyebrow">{{ $vehicle ? 'Atualizacao de veiculo' : 'Novo cadastro de veiculo' }}</span>
-            <h1>{{ $vehicle ? 'Atualize o veiculo vinculado ao professor' : 'Cadastro de veiculo por categoria e placa' }}</h1>
-            <p>Organize os veiculos da autoescola e prepare a agenda para controlar o uso por horario.</p>
+            <span class="eyebrow">{{ $vehicle ? 'Atualização de veículo' : 'Novo cadastro de veículo' }}</span>
+            <h1>{{ $vehicle ? 'Atualize o veículo vinculado ao professor' : 'Cadastro de veículo por categoria e placa' }}</h1>
+            <p>Organize os veículos da autoescola e prepare a agenda para controlar o uso por horário.</p>
         </div>
         <div class="header-actions">
             @if (! empty($backUrl))
@@ -49,7 +49,7 @@
     @endif
 
     @if ($errors->any())
-        <p class="notice notice-error">Corrija os campos obrigatorios e tente novamente.</p>
+        <p class="notice notice-error">Corrija os campos obrigatórios e tente novamente.</p>
     @endif
 
     <form method="POST" action="{{ $formAction }}">
@@ -60,8 +60,8 @@
 
         <div class="surface-card section-card">
             <div class="section-heading">
-                <h2>Informacoes do veiculo</h2>
-                <p>Defina a placa e a categoria de uso do veiculo.</p>
+                <h2>Informações do veículo</h2>
+                <p>Defina a placa e a categoria de uso do veículo.</p>
             </div>
 
             <div class="vehicle-form-grid">
@@ -70,7 +70,7 @@
                     <input id="placa" name="placa" type="text" placeholder="ABC1D23" value="{{ $v('placa') }}" required>
                 </div>
                 <div class="vehicle-field vehicle-col-6">
-                    <label for="categoria">Categoria do veiculo</label>
+                    <label for="categoria">Categoria do veículo</label>
                     <select id="categoria" name="categoria" required>
                         <option value="">Selecione a categoria</option>
                         @foreach ($categoryOptions as $value => $label)
@@ -85,7 +85,8 @@
             @if (! empty($backUrl))
                 <a class="btn-secondary" href="{{ $backUrl }}">Cancelar</a>
             @endif
-            <button class="btn" type="submit">{{ $submitLabel ?? 'Salvar veiculo' }}</button>
+            <button class="btn" type="submit">{{ $submitLabel ?? 'Salvar veículo' }}</button>
         </div>
     </form>
 </div>
+

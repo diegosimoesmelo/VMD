@@ -1,4 +1,4 @@
-@extends('layouts.panel', ['title' => 'Controle de aulas'])
+﻿@extends('layouts.panel', ['title' => 'Controle de aulas'])
 
 @section('content')
     <style>
@@ -133,8 +133,8 @@
     <div class="page-header">
         <div class="header-copy">
             <span class="eyebrow">Controle operacional</span>
-            <h1>Acompanhamento das aulas por grade de veiculo</h1>
-            <p>Gerente e administrativo podem acompanhar a grade da semana, verificar o que ja deveria ter acontecido e apontar ausencia do aluno ou problema com o carro quando necessario.</p>
+            <h1>Acompanhamento das aulas por grade de veículo</h1>
+            <p>Gerente e administrativo podem acompanhar a grade da semana, verificar o que já deveria ter acontecido e apontar ausência do aluno ou problema com o carro quando necessário.</p>
         </div>
     </div>
 
@@ -143,3 +143,4 @@
     </div>
     <script src="{{ asset('js/lesson-monitoring-page.js') }}"></script>
 @endsection
+

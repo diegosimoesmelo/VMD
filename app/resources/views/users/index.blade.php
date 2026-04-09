@@ -1,4 +1,4 @@
-@extends('layouts.panel', ['title' => 'Usuarios administrativos'])
+﻿@extends('layouts.panel', ['title' => 'Usuários administrativos'])
 
 @section('content')
     <style>
@@ -49,17 +49,17 @@
     <div class="page-header">
         <div class="header-copy">
             <span class="eyebrow">Controle de acesso</span>
-            <h1>Usuarios administrativos do sistema</h1>
+            <h1>Usuários administrativos do sistema</h1>
             <p>Gerencie os acessos internos do painel e mantenha os perfis administrativos separados por responsabilidade.</p>
             <div class="header-stats">
                 <div class="stat-chip">
                     <strong>{{ $users->count() }}</strong>
-                    <span>usuarios cadastrados</span>
+                    <span>usuários cadastrados</span>
                 </div>
             </div>
         </div>
         <div class="header-actions">
-            <a class="btn" href="{{ route('users.create') }}">Novo usuario</a>
+            <a class="btn" href="{{ route('users.create') }}">Novo usuário</a>
         </div>
     </div>
 
@@ -69,9 +69,9 @@
 
     @if ($users->isEmpty())
         <div class="surface-card empty-state">
-            <strong>Nenhum usuario administrativo cadastrado ainda.</strong>
-            <p>Cadastre o primeiro usuario para distribuir os acessos entre gerente e administrativo.</p>
-            <a class="btn" href="{{ route('users.create') }}">Cadastrar usuario</a>
+            <strong>Nenhum usuário administrativo cadastrado ainda.</strong>
+            <p>Cadastre o primeiro usuário para distribuir os acessos entre gerente e administrativo.</p>
+            <a class="btn" href="{{ route('users.create') }}">Cadastrar usuário</a>
         </div>
     @else
         <div class="surface-card table-card">
@@ -80,7 +80,7 @@
                     <thead>
                         <tr>
                             <th>Nome</th>
-                            <th>Usuario</th>
+                            <th>Usuário</th>
                             <th>Perfil</th>
                             <th></th>
                         </tr>
@@ -90,7 +90,7 @@
                             <tr>
                                 <td>
                                     <span class="record-title">{{ $user->name ?: $user->username }}</span>
-                                    <span class="record-subtitle">Usuario interno do painel</span>
+                                    <span class="record-subtitle">Usuário interno do painel</span>
                                 </td>
                                 <td>{{ $user->username }}</td>
                                 <td>
@@ -107,3 +107,4 @@
         </div>
     @endif
 @endsection
+

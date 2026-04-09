@@ -1,15 +1,15 @@
-@extends('layouts.panel', ['title' => 'Inicio'])
+﻿@extends('layouts.panel', ['title' => 'Início'])
 
 @section('content')
     @if (($mode ?? 'administrative') === 'teacher')
         @php
             $weekDayLabels = [
                 1 => 'Segunda-feira',
-                2 => 'Terca-feira',
+                2 => 'Terça-feira',
                 3 => 'Quarta-feira',
                 4 => 'Quinta-feira',
                 5 => 'Sexta-feira',
-                6 => 'Sabado',
+                6 => 'Sábado',
                 7 => 'Domingo',
             ];
         @endphp
@@ -98,16 +98,16 @@
                 <span class="eyebrow">Painel do professor</span>
                 <h1>{{ auth()->user()->name ?: auth()->user()->username }}</h1>
                 @if ($teacher)
-                    <p>Resumo da sua semana de aulas, pensado para consulta rapida no celular.</p>
+                    <p>Resumo da sua semana de aulas, pensado para consulta rápida no celular.</p>
                 @else
-                    <p>Seu acesso de professor ainda nao foi vinculado ao cadastro interno. Solicite ao gerente ou administrativo para revisar esse vinculo.</p>
+                    <p>Seu acesso de professor ainda não foi vinculado ao cadastro interno. Solicite ao gerente ou administrativo para revisar esse vínculo.</p>
                 @endif
 
                 @if ($teacher)
                     <div class="teacher-kpis">
                         <div class="teacher-kpi">
                             <strong>{{ $summary['total_week'] }}</strong>
-                            <span>proximas aulas</span>
+                            <span>próximas aulas</span>
                         </div>
                         <div class="teacher-kpi">
                             <strong>{{ $summary['today'] }}</strong>
@@ -115,7 +115,7 @@
                         </div>
                         <div class="teacher-kpi">
                             <strong>{{ $weekStart->format('d/m') }}</strong>
-                            <span>inicio da semana</span>
+                            <span>início da semana</span>
                         </div>
                     </div>
                 @endif
@@ -123,11 +123,11 @@
 
             @if ($teacher)
                 <section class="teacher-next">
-                    <h2>Proximo horario</h2>
+                    <h2>Próximo horário</h2>
                     @if ($summary['next'])
                         <p><strong>{{ $summary['next']->starts_at->format('d/m/Y H:i') }}</strong></p>
-                        <p>Aluno: {{ $summary['next']->student?->nome ?: 'Nao informado' }}</p>
-                        <p>Veiculo: {{ $summary['next']->vehicle ? strtoupper($summary['next']->vehicle->placa) : '-' }}</p>
+                        <p>Aluno: {{ $summary['next']->student?->nome ?: 'Não informado' }}</p>
+                        <p>Veículo: {{ $summary['next']->vehicle ? strtoupper($summary['next']->vehicle->placa) : '-' }}</p>
                     @else
                         <p>Nenhuma aula futura nesta semana.</p>
                     @endif
@@ -148,14 +148,14 @@
                                 <div class="teacher-appointment-list">
                                     @foreach ($dayAppointments as $appointment)
                                         <div class="teacher-appointment-item">
-                                            <strong>{{ $appointment->starts_at->format('H:i') }} ate {{ $appointment->ends_at?->format('H:i') }}</strong>
-                                            <div>Aluno: {{ $appointment->student?->nome ?: 'Nao informado' }}</div>
-                                            <div>Veiculo: {{ $appointment->vehicle ? strtoupper($appointment->vehicle->placa) : '-' }}</div>
+                                            <strong>{{ $appointment->starts_at->format('H:i') }} até {{ $appointment->ends_at?->format('H:i') }}</strong>
+                                            <div>Aluno: {{ $appointment->student?->nome ?: 'Não informado' }}</div>
+                                            <div>Veículo: {{ $appointment->vehicle ? strtoupper($appointment->vehicle->placa) : '-' }}</div>
                                             @if ($appointment->lesson_category)
                                                 <div>Categoria: {{ $appointment->lesson_category }}</div>
                                             @endif
                                             @if ($appointment->notes)
-                                                <div>Observacoes: {{ $appointment->notes }}</div>
+                                                <div>Observações: {{ $appointment->notes }}</div>
                                             @endif
                                         </div>
                                     @endforeach
@@ -174,7 +174,7 @@
                 3 => 'Qua',
                 4 => 'Qui',
                 5 => 'Sex',
-                6 => 'Sab',
+                6 => 'Sáb',
             ];
         @endphp
         <style>
@@ -273,7 +273,7 @@
         <div class="page-header">
             <div class="header-copy">
                 <span class="eyebrow">Painel administrativo</span>
-                <h1>Inicio</h1>
+                <h1>Início</h1>
                 <p>Bem-vindo, {{ auth()->user()->name ?: auth()->user()->username }}. Perfil atual: {{ auth()->user()->roleLabel() }}.</p>
                 <div class="header-stats">
                     <div class="stat-chip">
@@ -286,7 +286,7 @@
                     </div>
                     <div class="stat-chip">
                         <strong>{{ $stats['vehicles'] ?? 0 }}</strong>
-                        <span>veiculos</span>
+                        <span>veículos</span>
                     </div>
                     <div class="stat-chip">
                         <strong>{{ $stats['appointments_today'] ?? 0 }}</strong>
@@ -299,14 +299,14 @@
         <div class="dashboard-week-nav">
             <a class="btn-secondary" href="{{ route('dashboard', array_filter(['week_start' => $weekStart->copy()->subWeek()->toDateString(), 'teacher_id' => $teacherFilter, 'vehicle_id' => $vehicleFilter])) }}">Semana anterior</a>
             <span><strong>Semana {{ $weekStart->format('d/m') }} a {{ $weekStart->copy()->addDays(5)->format('d/m/Y') }}</strong></span>
-            <a class="btn-secondary" href="{{ route('dashboard', array_filter(['week_start' => $weekStart->copy()->addWeek()->toDateString(), 'teacher_id' => $teacherFilter, 'vehicle_id' => $vehicleFilter])) }}">Proxima semana</a>
+            <a class="btn-secondary" href="{{ route('dashboard', array_filter(['week_start' => $weekStart->copy()->addWeek()->toDateString(), 'teacher_id' => $teacherFilter, 'vehicle_id' => $vehicleFilter])) }}">Próxima semana</a>
         </div>
 
         <div class="surface-card section-card">
             <form method="GET" action="{{ route('dashboard') }}">
                 <div class="form-grid">
                     <div class="field col-4">
-                        <label for="week_start">Semana de referencia</label>
+                        <label for="week_start">Semana de referência</label>
                         <input id="week_start" name="week_start" type="date" value="{{ $weekStart->toDateString() }}">
                     </div>
                     <div class="field col-4">
@@ -319,7 +319,7 @@
                         </select>
                     </div>
                     <div class="field col-4">
-                        <label for="vehicle_id">Veiculo</label>
+                        <label for="vehicle_id">Veículo</label>
                         <select id="vehicle_id" name="vehicle_id">
                             <option value="">Todos</option>
                             @foreach ($allVehicles as $vehicleOption)
@@ -340,7 +340,7 @@
                 <div class="summary-header">
                     <div>
                         <h2>Resumo semanal dos professores</h2>
-                        <p>Consulta rapida da agenda da equipe para a semana selecionada.</p>
+                        <p>Consulta rápida da agenda da equipe para a semana selecionada.</p>
                     </div>
                 </div>
 
@@ -355,7 +355,7 @@
                                 <table class="mini-grid">
                                     <thead>
                                         <tr>
-                                            <th class="mini-time">Horario</th>
+                                            <th class="mini-time">Horário</th>
                                             @foreach ($weekDays as $day)
                                                 <th>{{ $weekDayLabels[$day->dayOfWeekIso] ?? $day->format('d/m') }}<br><span class="muted">{{ $day->format('d/m') }}</span></th>
                                             @endforeach
@@ -372,7 +372,7 @@
                                                     <td>
                                                         <div class="mini-cell {{ $appointment ? 'busy' : '' }}">
                                                             @if ($appointment)
-                                                                <strong>{{ $appointment->student?->nome ?: 'Indisponivel' }}</strong>
+                                                                <strong>{{ $appointment->student?->nome ?: 'Indisponível' }}</strong>
                                                                 @if ($appointment->vehicle)
                                                                     <div>{{ strtoupper($appointment->vehicle->placa) }}</div>
                                                                 @endif
@@ -395,8 +395,8 @@
             <section class="surface-card summary-card">
                 <div class="summary-header">
                     <div>
-                        <h2>Resumo semanal dos veiculos</h2>
-                        <p>Grade consolidada por veiculo para leitura operacional da semana.</p>
+                        <h2>Resumo semanal dos veículos</h2>
+                        <p>Grade consolidada por veículo para leitura operacional da semana.</p>
                     </div>
                 </div>
 
@@ -411,7 +411,7 @@
                                 <table class="mini-grid">
                                     <thead>
                                         <tr>
-                                            <th class="mini-time">Horario</th>
+                                            <th class="mini-time">Horário</th>
                                             @foreach ($weekDays as $day)
                                                 <th>{{ $weekDayLabels[$day->dayOfWeekIso] ?? $day->format('d/m') }}<br><span class="muted">{{ $day->format('d/m') }}</span></th>
                                             @endforeach
@@ -428,7 +428,7 @@
                                                     <td>
                                                         <div class="mini-cell {{ $appointment ? 'busy' : '' }}">
                                                             @if ($appointment)
-                                                                <strong>{{ $appointment->teacher?->nome ?: 'Indisponivel' }}</strong>
+                                                                <strong>{{ $appointment->teacher?->nome ?: 'Indisponível' }}</strong>
                                                                 @if ($appointment->student)
                                                                     <div>{{ $appointment->student->nome }}</div>
                                                                 @endif
@@ -450,3 +450,4 @@
         </div>
     @endif
 @endsection
+

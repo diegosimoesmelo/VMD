@@ -1,11 +1,11 @@
-@extends('layouts.panel', ['title' => 'Primeiro acesso'])
+﻿@extends('layouts.panel', ['title' => 'Primeiro acesso'])
 
 @section('content')
     <div class="page-header">
         <div class="header-copy">
             <span class="eyebrow">Primeiro acesso</span>
             <h1>Defina sua nova senha</h1>
-            <p>Por seguranca, a senha inicial precisa ser trocada antes de continuar usando o sistema.</p>
+            <p>Por segurança, a senha inicial precisa ser trocada antes de continuar usando o sistema.</p>
         </div>
     </div>
 
@@ -18,8 +18,8 @@
     @endif
 
     <div class="surface-card section-card" style="max-width: 720px;">
-        <h2>Troca obrigatoria de senha</h2>
-        <p>Usuario: <strong>{{ $user->name ?: $user->username }}</strong></p>
+        <h2>Troca obrigatória de senha</h2>
+        <p>Usuário: <strong>{{ $user->name ?: $user->username }}</strong></p>
         <p>A nova senha pode ser simples, mas precisa ter pelo menos 6 caracteres.</p>
 
         <form method="POST" action="{{ route('password.change.update') }}">
@@ -38,3 +38,4 @@
         </form>
     </div>
 @endsection
+

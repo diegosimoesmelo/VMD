@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -310,7 +310,7 @@
                 <span class="brand-mark">VMD Sistema</span>
                 <h2 class="brand-title">Vença o Medo de Dirigir.</h2>
                 <p class="brand-copy">
-                    Centralize alunos, professores, veiculos e agendamentos em um ambiente mais claro, rapido e organizado para a operacao diaria.
+                    Centralize alunos, professores, veículos e agendamentos em um ambiente mais claro, rápido e organizado para a operação diária.
                 </p>
             </div>
 
@@ -318,11 +318,11 @@
                 <div class="brand-grid">
                     <div class="brand-stat">
                         <strong>VMD</strong>
-                        <span>Visao central da operacao, com foco em agenda e acompanhamento dos alunos.</span>
+                        <span>Visão central da operação, com foco em agenda e acompanhamento dos alunos.</span>
                     </div>
                     <div class="brand-stat">
                         <strong>Agenda</strong>
-                        <span>Planejamento semanal de professores e veiculos com leitura rapida e fluxo continuo.</span>
+                        <span>Planejamento semanal de professores e veículos com leitura rápida e fluxo contínuo.</span>
                     </div>
                 </div>
             </div>
@@ -332,7 +332,7 @@
             <div class="login-card">
                 <span class="eyebrow">Acesso ao sistema</span>
                 <h1>Entrar no VMD</h1>
-                <p class="intro">Use suas credenciais para acessar a operacao da autoescola.</p>
+                <p class="intro">Use suas credenciais para acessar a operação da autoescola.</p>
 
                 @if ($errors->any())
                     <div class="error">{{ $errors->first() }}</div>
@@ -342,7 +342,7 @@
                     @csrf
 
                     <div class="field">
-                        <label for="username">Usuario</label>
+                        <label for="username">Usuário</label>
                         <input type="text" id="username" name="username" value="{{ old('username') }}" required autofocus>
                     </div>
 
@@ -361,9 +361,10 @@
                     <button class="btn" type="submit">Entrar no sistema</button>
                 </form>
 
-                <p class="login-footnote">VMD · Plataforma de gestao para autoescola</p>
+                <p class="login-footnote">VMD · Plataforma de gestão para autoescola</p>
             </div>
         </section>
     </main>
 </body>
 </html>
+

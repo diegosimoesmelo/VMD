@@ -1,0 +1,46 @@
+services:
+  app:
+    build:
+      context: .
+    image: vmd-local
+    ports:
+      - "8080:80"
+    environment:
+      APP_NAME: VMD
+      APP_ENV: local
+      APP_KEY: base64:wb4x3T6VcJ0z+fwkaWkRhzdbD0Wj+rcdxqYRL1ujV6E=
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8080
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_DATABASE: vmd
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_SSLMODE: disable
+      LOG_CHANNEL: stack
+      CACHE_DRIVER: file
+      QUEUE_CONNECTION: sync
+      SESSION_DRIVER: file
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: vmd
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - vmd-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d vmd"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  vmd-postgres-data:

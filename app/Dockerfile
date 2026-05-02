@@ -47,12 +47,15 @@ RUN composer install \
 
 COPY . .
 COPY --from=assets /app/public/build ./public/build
+COPY docker/entrypoint.sh /usr/local/bin/vmd-entrypoint
 
 RUN composer dump-autoload --optimize \
     && php artisan package:discover --ansi \
+    && chmod +x /usr/local/bin/vmd-entrypoint \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R ug+rwx storage bootstrap/cache
 
 EXPOSE 80
 
+ENTRYPOINT ["vmd-entrypoint"]
 CMD ["apache2-foreground"]

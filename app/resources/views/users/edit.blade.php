@@ -5,7 +5,7 @@
         'formAction' => route('users.update', $user),
         'formMethod' => 'PUT',
         'user' => $user,
-        'submitLabel' => 'Salvar alteraÃ§Ãµes',
+        'submitLabel' => 'Salvar alterações',
         'backUrl' => route('users.index'),
     ])
 @endsection

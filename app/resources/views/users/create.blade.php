@@ -5,7 +5,7 @@
         'formAction' => route('users.store'),
         'formMethod' => 'POST',
         'user' => null,
-        'submitLabel' => 'Salvar usuÃ¡rio',
+        'submitLabel' => 'Salvar usuário',
         'backUrl' => route('users.index'),
     ])
 @endsection

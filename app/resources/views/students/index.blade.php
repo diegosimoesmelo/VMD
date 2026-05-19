@@ -16,6 +16,8 @@
             'primeira_habilitacao' => 'Primeira habilitação',
             'adicao_categoria' => 'Adição de categoria',
             'aula_habilitado' => 'Aula para habilitado',
+            'prova_atualizacao' => 'Prova de Atualização',
+            'prova_reciclagem' => 'Prova de Reciclagem',
         ];
     @endphp
 
@@ -219,6 +221,9 @@
             border: 1px solid rgba(var(--color-secondary-rgb), 0.08);
             overflow: hidden;
         }
+        .timeline-modal-card.wide {
+            width: min(860px, 100%);
+        }
         .timeline-modal-header,
         .timeline-modal-body,
         .timeline-modal-footer {
@@ -243,6 +248,37 @@
             margin: 0 0 6px;
             font-size: 22px;
             color: var(--color-secondary);
+        }
+        .modal-tabs {
+            display: flex;
+            gap: 8px;
+            padding: 0 0 18px;
+            border-bottom: 1px solid rgba(var(--color-secondary-rgb), 0.08);
+            margin-bottom: 18px;
+        }
+        .modal-tab {
+            width: auto;
+            margin: 0;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(var(--color-secondary-rgb), 0.1);
+            background: rgba(255, 255, 255, 0.92);
+            color: var(--color-secondary);
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: none;
+        }
+        .modal-tab.active {
+            background: rgba(217, 119, 6, 0.12);
+            border-color: rgba(217, 119, 6, 0.28);
+            color: #9a6700;
+        }
+        .modal-tab-panel {
+            display: none;
+        }
+        .modal-tab-panel.active {
+            display: block;
         }
         .schedule-list {
             display: grid;
@@ -270,6 +306,65 @@
             color: var(--color-muted-text);
             font-size: 13px;
             font-weight: 600;
+        }
+        .purchase-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            padding: 16px;
+            margin-bottom: 18px;
+            border-radius: 18px;
+            background: rgba(var(--color-secondary-rgb), 0.04);
+            border: 1px solid rgba(var(--color-secondary-rgb), 0.08);
+        }
+        .purchase-form h3,
+        .purchase-history h3 {
+            grid-column: 1 / -1;
+            margin: 0;
+            color: var(--color-secondary);
+            font-size: 16px;
+        }
+        .purchase-form label {
+            display: block;
+            margin-bottom: 7px;
+            color: var(--color-muted-text);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .purchase-form textarea {
+            min-height: 78px;
+            resize: vertical;
+        }
+        .purchase-form .full-row {
+            grid-column: 1 / -1;
+        }
+        .purchase-form .purchase-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .purchase-history {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+        .purchase-item {
+            display: grid;
+            gap: 6px;
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: rgba(22, 163, 74, 0.07);
+            border: 1px solid rgba(22, 163, 74, 0.14);
+        }
+        .purchase-item strong {
+            color: var(--color-secondary);
+        }
+        .purchase-item span,
+        .purchase-item div {
+            color: var(--color-muted-text);
+            font-size: 13px;
         }
         .schedule-item {
             padding: 14px 16px;
@@ -335,6 +430,9 @@
             }
             .lesson-balance-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .purchase-form {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -509,8 +607,11 @@
                                     <div class="action-stack">
                                         <a class="btn-secondary" href="{{ route('students.edit', $student) }}">Editar</a>
                                         <button class="modal-trigger" type="button" data-modal-target="appointments-modal-{{ $student->id }}">
-                                            Ver aulas
+                                            Aulas e compras
                                         </button>
+                                        @if (($student->valor_pago ?? 0) > 0)
+                                            <a class="btn-secondary" href="{{ route('students.receipts.registration.show', $student) }}" target="_blank" rel="noopener">Recibo</a>
+                                        @endif
                                         @if ($student->nextStatus())
                                             <form class="inline-form" method="POST" action="{{ route('students.advance-status', $student) }}">
                                                 @csrf
@@ -560,65 +661,150 @@
                                     </div>
 
                                     <div class="timeline-modal" id="appointments-modal-{{ $student->id }}" aria-hidden="true">
-                                        <div class="timeline-modal-card" role="dialog" aria-modal="true" aria-labelledby="appointments-modal-title-{{ $student->id }}">
+                                        <div class="timeline-modal-card wide" role="dialog" aria-modal="true" aria-labelledby="appointments-modal-title-{{ $student->id }}">
                                             <div class="timeline-modal-header">
                                                 <div>
                                                     <h2 class="timeline-modal-title" id="appointments-modal-title-{{ $student->id }}">{{ $student->nome }}</h2>
-                                                    <p>Aulas e horários já marcados para este aluno.</p>
+                                                    <p>Aulas contratadas, compras adicionais e horários já marcados para este aluno.</p>
                                                 </div>
                                                 <button class="timeline-close" type="button" data-modal-close aria-label="Fechar">&times;</button>
                                             </div>
                                             <div class="timeline-modal-body">
-                                                <div class="lesson-balance-grid">
-                                                    <div class="lesson-balance-card">
-                                                        <strong>{{ $student->quantidade_aulas_a_contratadas ?? 0 }}</strong>
-                                                        <span>Aulas A contratadas</span>
+                                                <div class="modal-tabs" role="tablist" aria-label="Aulas e compras de {{ $student->nome }}">
+                                                    <button class="modal-tab active" type="button" role="tab" aria-selected="true" data-tab-target="lessons-tab-{{ $student->id }}">Aulas</button>
+                                                    <button class="modal-tab" type="button" role="tab" aria-selected="false" data-tab-target="purchases-tab-{{ $student->id }}">Compras</button>
+                                                </div>
+
+                                                <div class="modal-tab-panel active" id="lessons-tab-{{ $student->id }}" role="tabpanel">
+                                                    <div class="lesson-balance-grid">
+                                                        <div class="lesson-balance-card">
+                                                            <strong>{{ $student->quantidade_aulas_a_contratadas ?? 0 }}</strong>
+                                                            <span>Aulas A contratadas</span>
+                                                        </div>
+                                                        <div class="lesson-balance-card">
+                                                            <strong>{{ $student->quantidade_aulas_a_restantes ?? ($student->quantidade_aulas_a_contratadas ?? 0) }}</strong>
+                                                            <span>Aulas A restantes</span>
+                                                        </div>
+                                                        <div class="lesson-balance-card">
+                                                            <strong>{{ $student->quantidade_aulas_b_contratadas ?? 0 }}</strong>
+                                                            <span>Aulas B contratadas</span>
+                                                        </div>
+                                                        <div class="lesson-balance-card">
+                                                            <strong>{{ $student->quantidade_aulas_b_restantes ?? ($student->quantidade_aulas_b_contratadas ?? 0) }}</strong>
+                                                            <span>Aulas B restantes</span>
+                                                        </div>
                                                     </div>
-                                                    <div class="lesson-balance-card">
-                                                        <strong>{{ $student->quantidade_aulas_a_restantes ?? ($student->quantidade_aulas_a_contratadas ?? 0) }}</strong>
-                                                        <span>Aulas A restantes</span>
-                                                    </div>
-                                                    <div class="lesson-balance-card">
-                                                        <strong>{{ $student->quantidade_aulas_b_contratadas ?? 0 }}</strong>
-                                                        <span>Aulas B contratadas</span>
-                                                    </div>
-                                                    <div class="lesson-balance-card">
-                                                        <strong>{{ $student->quantidade_aulas_b_restantes ?? ($student->quantidade_aulas_b_contratadas ?? 0) }}</strong>
-                                                        <span>Aulas B restantes</span>
+
+                                                    @if ($student->appointments->isEmpty())
+                                                        <div class="schedule-empty">Nenhuma aula marcada para este aluno até o momento.</div>
+                                                    @else
+                                                        <div class="schedule-list">
+                                                            @foreach ($student->appointments as $appointment)
+                                                                @php
+                                                                    $lessonStatus = $appointment->effectiveLessonStatus();
+                                                                    $lessonStatusClass = match ($lessonStatus) {
+                                                                        \App\Models\Appointment::LESSON_STATUS_COMPLETED => 'completed',
+                                                                        \App\Models\Appointment::LESSON_STATUS_STUDENT_ABSENT => 'student-absent',
+                                                                        \App\Models\Appointment::LESSON_STATUS_VEHICLE_ISSUE => 'vehicle-issue',
+                                                                        default => 'scheduled',
+                                                                    };
+                                                                @endphp
+                                                                <div class="schedule-item">
+                                                                    <strong>{{ $appointment->starts_at?->format('d/m/Y') }} as {{ $appointment->starts_at?->format('H:i') }}</strong>
+                                                                    <span class="schedule-status {{ $lessonStatusClass }}">{{ $appointment->effectiveLessonStatusLabel() }}</span>
+                                                                    <div>Professor: {{ $appointment->teacher?->nome ?: '-' }}</div>
+                                                                    <div>Veículo: {{ $appointment->vehicle ? strtoupper($appointment->vehicle->placa) : '-' }}</div>
+                                                                    @if ($appointment->lesson_category)
+                                                                        <div>Categoria da aula: {{ $appointment->lesson_category }}</div>
+                                                                    @endif
+                                                                    @if ($appointment->lesson_status_notes)
+                                                                        <div>Status operacional: {{ $appointment->lesson_status_notes }}</div>
+                                                                    @endif
+                                                                    @if ($appointment->notes)
+                                                                        <div>Observações: {{ $appointment->notes }}</div>
+                                                                    @endif
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    @endif
+                                                </div>
+
+                                                <div class="modal-tab-panel" id="purchases-tab-{{ $student->id }}" role="tabpanel">
+                                                    <form class="purchase-form receipt-target-form" method="POST" action="{{ route('students.lesson-purchases.store', $student) }}" data-receipt-amount-field="amount_paid">
+                                                        @csrf
+                                                        <input type="hidden" name="tab" value="{{ $currentTab }}">
+                                                        <input type="hidden" name="search" value="{{ $search }}">
+                                                        <input type="hidden" name="teacher_id" value="{{ $teacherFilter }}">
+                                                        <input type="hidden" name="timeline_status" value="{{ $timelineStatusFilter }}">
+
+                                                        <h3>Registrar compra de aulas</h3>
+                                                        <div>
+                                                            <label for="lesson_category_{{ $student->id }}">Categoria</label>
+                                                            <select id="lesson_category_{{ $student->id }}" name="lesson_category" required>
+                                                                @if ($student->supportsLessonCategory('A'))
+                                                                    <option value="A">Aulas A</option>
+                                                                @endif
+                                                                @if ($student->supportsLessonCategory('B'))
+                                                                    <option value="B">Aulas B</option>
+                                                                @endif
+                                                            </select>
+                                                        </div>
+                                                        <div>
+                                                            <label for="quantity_{{ $student->id }}">Quantidade</label>
+                                                            <input id="quantity_{{ $student->id }}" name="quantity" type="number" min="1" step="1" required>
+                                                        </div>
+                                                        <div>
+                                                            <label for="amount_paid_{{ $student->id }}">Valor pago</label>
+                                                            <input id="amount_paid_{{ $student->id }}" name="amount_paid" type="number" min="0" step="0.01" placeholder="Opcional">
+                                                        </div>
+                                                        <div>
+                                                            <label for="purchase_payment_method_{{ $student->id }}">Tipo de pagamento</label>
+                                                            <select id="purchase_payment_method_{{ $student->id }}" name="payment_method">
+                                                                <option value="">Selecione</option>
+                                                                @foreach (config('receipt.payment_methods') as $methodValue => $methodLabel)
+                                                                    <option value="{{ $methodValue }}">{{ $methodLabel }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                        <div class="full-row">
+                                                            <label for="notes_{{ $student->id }}">Observações</label>
+                                                            <textarea id="notes_{{ $student->id }}" name="notes" placeholder="Opcional"></textarea>
+                                                        </div>
+                                                        <div class="purchase-actions">
+                                                            <button class="btn" type="submit">Adicionar aulas</button>
+                                                        </div>
+                                                    </form>
+
+                                                    <div class="purchase-history">
+                                                        <h3>Histórico de compras</h3>
+                                                        @if ($student->lessonPurchases->isEmpty())
+                                                            <div class="schedule-empty">Nenhuma compra adicional registrada para este aluno.</div>
+                                                        @else
+                                                            @foreach ($student->lessonPurchases as $purchase)
+                                                                <div class="purchase-item">
+                                                                    <strong>{{ $purchase->quantity }} aula{{ $purchase->quantity === 1 ? '' : 's' }} {{ $purchase->lesson_category }}</strong>
+                                                                    <span>
+                                                                        {{ $purchase->purchased_at?->format('d/m/Y H:i') }}
+                                                                        @if ($purchase->amount_paid !== null)
+                                                                            - R$ {{ number_format((float) $purchase->amount_paid, 2, ',', '.') }}
+                                                                        @endif
+                                                                        @if ($purchase->user)
+                                                                            - {{ $purchase->user->name ?: $purchase->user->username }}
+                                                                        @endif
+                                                                    </span>
+                                                                    @if ($purchase->notes)
+                                                                        <div>{{ $purchase->notes }}</div>
+                                                                    @endif
+                                                                    @if ($purchase->amount_paid !== null)
+                                                                        <div>
+                                                                            <a class="modal-trigger" href="{{ route('lesson-purchases.receipts.show', $purchase) }}" target="_blank" rel="noopener">Ver recibo</a>
+                                                                        </div>
+                                                                    @endif
+                                                                </div>
+                                                            @endforeach
+                                                        @endif
                                                     </div>
                                                 </div>
-                                                @if ($student->appointments->isEmpty())
-                                                    <div class="schedule-empty">Nenhuma aula marcada para este aluno até o momento.</div>
-                                                @else
-                                                    <div class="schedule-list">
-                                                        @foreach ($student->appointments as $appointment)
-                                                            @php
-                                                                $lessonStatus = $appointment->effectiveLessonStatus();
-                                                                $lessonStatusClass = match ($lessonStatus) {
-                                                                    \App\Models\Appointment::LESSON_STATUS_COMPLETED => 'completed',
-                                                                    \App\Models\Appointment::LESSON_STATUS_STUDENT_ABSENT => 'student-absent',
-                                                                    \App\Models\Appointment::LESSON_STATUS_VEHICLE_ISSUE => 'vehicle-issue',
-                                                                    default => 'scheduled',
-                                                                };
-                                                            @endphp
-                                                            <div class="schedule-item">
-                                                                <strong>{{ $appointment->starts_at?->format('d/m/Y') }} as {{ $appointment->starts_at?->format('H:i') }}</strong>
-                                                                <span class="schedule-status {{ $lessonStatusClass }}">{{ $appointment->effectiveLessonStatusLabel() }}</span>
-                                                                <div>Professor: {{ $appointment->teacher?->nome ?: '-' }}</div>
-                                                                <div>Veículo: {{ $appointment->vehicle ? strtoupper($appointment->vehicle->placa) : '-' }}</div>
-                                                                @if ($appointment->lesson_category)
-                                                                    <div>Categoria da aula: {{ $appointment->lesson_category }}</div>
-                                                                @endif
-                                                                @if ($appointment->lesson_status_notes)
-                                                                    <div>Status operacional: {{ $appointment->lesson_status_notes }}</div>
-                                                                @endif
-                                                                @if ($appointment->notes)
-                                                                    <div>Observações: {{ $appointment->notes }}</div>
-                                                                @endif
-                                                            </div>
-                                                        @endforeach
-                                                    </div>
-                                                @endif
                                             </div>
                                             <div class="timeline-modal-footer">
                                                 <button class="btn-secondary" type="button" data-modal-close>Fechar</button>
@@ -652,6 +838,43 @@
                     if (event.target === modal || event.target.hasAttribute('data-modal-close')) {
                         modal.classList.remove('is-open');
                         modal.setAttribute('aria-hidden', 'true');
+                    }
+                });
+            });
+
+            document.querySelectorAll('.modal-tab').forEach(function (tab) {
+                tab.addEventListener('click', function () {
+                    var modalBody = tab.closest('.timeline-modal-body');
+                    var target = document.getElementById(tab.getAttribute('data-tab-target'));
+
+                    if (! modalBody || ! target) {
+                        return;
+                    }
+
+                    modalBody.querySelectorAll('.modal-tab').forEach(function (item) {
+                        item.classList.remove('active');
+                        item.setAttribute('aria-selected', 'false');
+                    });
+
+                    modalBody.querySelectorAll('.modal-tab-panel').forEach(function (panel) {
+                        panel.classList.remove('active');
+                    });
+
+                    tab.classList.add('active');
+                    tab.setAttribute('aria-selected', 'true');
+                    target.classList.add('active');
+                });
+            });
+
+            document.querySelectorAll('.receipt-target-form').forEach(function (form) {
+                form.addEventListener('submit', function () {
+                    var amountField = form.querySelector('[name="' + form.dataset.receiptAmountField + '"]');
+                    var amount = amountField ? parseFloat(amountField.value || '0') : 0;
+
+                    if (amount > 0) {
+                        form.setAttribute('target', '_blank');
+                    } else {
+                        form.removeAttribute('target');
                     }
                 });
             });

@@ -56,6 +56,7 @@ class Student extends Model
         'servico_oferecido',
         'categoria_pretendida',
         'valor_pago',
+        'payment_method',
         'quantidade_aulas_a_contratadas',
         'quantidade_aulas_b_contratadas',
         'observacao',
@@ -80,6 +81,11 @@ class Student extends Model
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);
+    }
+
+    public function lessonPurchases(): HasMany
+    {
+        return $this->hasMany(StudentLessonPurchase::class);
     }
 
     /**

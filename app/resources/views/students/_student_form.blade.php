@@ -73,7 +73,13 @@
         <p class="notice notice-error">Corrija os campos obrigatórios e tente novamente.</p>
     @endif
 
-    <form id="studentForm" method="POST" action="{{ $formAction }}">
+    <form
+        id="studentForm"
+        method="POST"
+        action="{{ $formAction }}"
+        data-receipt-amount-field="valor_pago"
+        data-receipt-opens-tab="{{ empty($formMethod) || strtoupper($formMethod) === 'POST' ? 'true' : 'false' }}"
+    >
         @csrf
         @if (! empty($formMethod) && strtoupper($formMethod) === 'PUT')
             @method('PUT')
@@ -283,6 +289,8 @@
                             <option value="primeira_habilitacao" @selected($v('servico_oferecido') === 'primeira_habilitacao')>Primeira habilitação</option>
                             <option value="adicao_categoria" @selected($v('servico_oferecido') === 'adicao_categoria')>Adição de categoria</option>
                             <option value="aula_habilitado" @selected($v('servico_oferecido') === 'aula_habilitado')>Aula para habilitado</option>
+                            <option value="prova_atualizacao" @selected($v('servico_oferecido') === 'prova_atualizacao')>Prova de Atualização</option>
+                            <option value="prova_reciclagem" @selected($v('servico_oferecido') === 'prova_reciclagem')>Prova de Reciclagem</option>
                         </select>
                     </div>
                     <div class="field col-4">
@@ -297,6 +305,15 @@
                     <div class="field col-4">
                         <label for="valor_pago">Valor pago</label>
                         <input id="valor_pago" name="valor_pago" type="number" step="0.01" min="0" placeholder="0,00" value="{{ $v('valor_pago') }}">
+                    </div>
+                    <div class="field col-4">
+                        <label for="payment_method">Tipo de pagamento</label>
+                        <select id="payment_method" name="payment_method">
+                            <option value="">Selecione</option>
+                            @foreach (config('receipt.payment_methods') as $methodValue => $methodLabel)
+                                <option value="{{ $methodValue }}" @selected($v('payment_method') === $methodValue)>{{ $methodLabel }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="field col-4">
                         <label for="quantidade_aulas_a_contratadas">Aulas A contratadas</label>
@@ -340,5 +357,25 @@
 </div>
 
 <script src="{{ asset('js/student-form.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var form = document.getElementById('studentForm');
+
+        if (! form) {
+            return;
+        }
+
+        form.addEventListener('submit', function () {
+            var amountField = form.querySelector('[name="' + form.dataset.receiptAmountField + '"]');
+            var amount = amountField ? parseFloat(amountField.value || '0') : 0;
+
+            if (form.dataset.receiptOpensTab === 'true' && amount > 0) {
+                form.setAttribute('target', '_blank');
+            } else {
+                form.removeAttribute('target');
+            }
+        });
+    });
+</script>
 
 

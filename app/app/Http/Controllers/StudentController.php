@@ -6,6 +6,7 @@ use App\Models\Student;
 use App\Models\Teacher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -26,6 +27,10 @@ class StudentController extends Controller
                 'appointments' => fn ($query) => $query
                     ->with(['teacher', 'vehicle'])
                     ->orderByDesc('starts_at'),
+                'lessonPurchases' => fn ($query) => $query
+                    ->with('user')
+                    ->orderByDesc('purchased_at')
+                    ->orderByDesc('id'),
             ])
             ->orderBy('nome');
 
@@ -101,6 +106,12 @@ class StudentController extends Controller
         $student->save();
         $student->syncRemainingLessons();
 
+        if (($student->valor_pago ?? 0) > 0) {
+            return redirect()
+                ->route('students.receipts.registration.show', $student)
+                ->with('success', 'Aluno cadastrado com sucesso. Recibo gerado automaticamente.');
+        }
+
         return redirect()
             ->route('students.index')
             ->with('success', 'Aluno cadastrado com sucesso. Matricula: '.$student->matricula);
@@ -144,6 +155,67 @@ class StudentController extends Controller
             ->with('success', 'Status do aluno atualizado para '.$student->statusLabel().'.');
     }
 
+    public function storeLessonPurchase(Request $request, Student $student): RedirectResponse
+    {
+        $validated = $request->validate([
+            'lesson_category' => ['required', Rule::in(['A', 'B'])],
+            'quantity' => ['required', 'integer', 'min:1', 'max:999'],
+            'amount_paid' => ['nullable', 'numeric', 'min:0'],
+            'payment_method' => ['nullable', 'required_with:amount_paid', Rule::in(array_keys(config('receipt.payment_methods')))],
+            'notes' => ['nullable', 'string', 'max:1000'],
+            'tab' => ['nullable', 'string'],
+            'search' => ['nullable', 'string'],
+            'teacher_id' => ['nullable', 'string'],
+            'timeline_status' => ['nullable', 'string'],
+        ]);
+
+        if (! $student->supportsLessonCategory($validated['lesson_category'])) {
+            return redirect()
+                ->route('students.index', $request->only(['tab', 'search', 'teacher_id', 'timeline_status']))
+                ->withErrors(['lesson_category' => 'A categoria da compra nao e compativel com o cadastro do aluno.']);
+        }
+
+        $purchase = null;
+
+        DB::transaction(function () use ($student, $validated, &$purchase) {
+            $student = Student::query()
+                ->whereKey($student->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $purchase = $student->lessonPurchases()->create([
+                'user_id' => auth()->id(),
+                'lesson_category' => $validated['lesson_category'],
+                'quantity' => $validated['quantity'],
+                'amount_paid' => $validated['amount_paid'] ?? null,
+                'payment_method' => $validated['payment_method'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+                'purchased_at' => now(),
+            ]);
+
+            $field = $validated['lesson_category'] === 'A'
+                ? 'quantidade_aulas_a_contratadas'
+                : 'quantidade_aulas_b_contratadas';
+
+            $student->forceFill([
+                $field => ((int) ($student->{$field} ?? 0)) + (int) $validated['quantity'],
+            ])->save();
+
+            $student->refresh();
+            $student->syncRemainingLessons();
+        });
+
+        if ($purchase && $purchase->amount_paid !== null) {
+            return redirect()
+                ->route('lesson-purchases.receipts.show', $purchase)
+                ->with('success', 'Compra registrada com sucesso. Recibo gerado automaticamente.');
+        }
+
+        return redirect()
+            ->route('students.index', $request->only(['tab', 'search', 'teacher_id', 'timeline_status']))
+            ->with('success', 'Compra de aulas registrada para '.$student->nome.'.');
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -183,9 +255,10 @@ class StudentController extends Controller
             'nome_mae' => ['required', 'string', 'max:255'],
             'teacher_id' => ['nullable', 'integer', 'exists:teachers,id'],
             'status' => ['required', Rule::in(array_keys(Student::statusOptions()))],
-            'servico_oferecido' => ['nullable', 'in:primeira_habilitacao,adicao_categoria,aula_habilitado'],
+            'servico_oferecido' => ['nullable', 'in:primeira_habilitacao,adicao_categoria,aula_habilitado,prova_atualizacao,prova_reciclagem'],
             'categoria_pretendida' => ['nullable', 'in:A,B,AB'],
             'valor_pago' => ['nullable', 'numeric', 'min:0'],
+            'payment_method' => ['nullable', 'required_with:valor_pago', Rule::in(array_keys(config('receipt.payment_methods')))],
             'quantidade_aulas_a_contratadas' => ['nullable', 'integer', 'min:0'],
             'quantidade_aulas_b_contratadas' => ['nullable', 'integer', 'min:0'],
             'observacao' => ['nullable', 'string'],

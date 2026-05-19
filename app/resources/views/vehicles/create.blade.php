@@ -3,7 +3,7 @@
 @section('content')
     @include('vehicles._vehicle_form', [
         'formAction' => route('vehicles.store'),
-        'submitLabel' => 'Salvar veÃ­culo',
+        'submitLabel' => 'Salvar veí­culo',
         'backUrl' => route('vehicles.index'),
     ])
 @endsection

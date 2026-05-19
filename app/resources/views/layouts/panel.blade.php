@@ -30,6 +30,7 @@
         }
         .sidebar {
             width: 280px;
+            flex: 0 0 280px;
             background: linear-gradient(180deg, rgba(var(--color-secondary-rgb), 0.98), rgba(var(--color-secondary-rgb), 0.88));
             color: #fff;
             padding: 24px 18px;
@@ -79,6 +80,7 @@
         }
         .content {
             flex: 1;
+            min-width: 0;
             padding: 4px 0;
         }
         .panel {
@@ -347,6 +349,7 @@
             }
             .sidebar {
                 width: 100%;
+                flex-basis: auto;
                 height: auto;
                 position: static;
             }
@@ -421,4 +424,3 @@
 <script src="{{ asset('js/global-error-handler.js') }}"></script>
 </body>
 </html>
-

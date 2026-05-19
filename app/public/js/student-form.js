@@ -72,6 +72,39 @@
         }
     }
 
+    function setupLessonCategoryFields() {
+        const categoryInput = document.getElementById("categoria_pretendida");
+        const lessonsAInput = document.getElementById("quantidade_aulas_a_contratadas");
+        const lessonsBInput = document.getElementById("quantidade_aulas_b_contratadas");
+
+        if (!categoryInput || !lessonsAInput || !lessonsBInput) {
+            return;
+        }
+
+        const syncFields = () => {
+            const category = categoryInput.value;
+            const allowsA = category === "A" || category === "AB";
+            const allowsB = category === "B" || category === "AB";
+
+            lessonsAInput.disabled = !allowsA;
+            lessonsBInput.disabled = !allowsB;
+
+            lessonsAInput.placeholder = allowsA ? "Ex.: 10" : "Indisponível para esta categoria";
+            lessonsBInput.placeholder = allowsB ? "Ex.: 20" : "Indisponível para esta categoria";
+
+            if (!allowsA) {
+                lessonsAInput.value = "";
+            }
+
+            if (!allowsB) {
+                lessonsBInput.value = "";
+            }
+        };
+
+        categoryInput.addEventListener("change", syncFields);
+        syncFields();
+    }
+
     function setStep(step) {
         const step1 = document.getElementById("step1");
         const step2 = document.getElementById("step2");
@@ -112,5 +145,6 @@
 
     document.addEventListener("DOMContentLoaded", () => {
         setupMasks();
+        setupLessonCategoryFields();
     });
 })();

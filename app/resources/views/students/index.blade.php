@@ -730,6 +730,14 @@
                                                 </div>
 
                                                 <div class="modal-tab-panel" id="purchases-tab-{{ $student->id }}" role="tabpanel">
+                                                    @php
+                                                        $purchaseLessonCategories = match ($student->categoria_pretendida) {
+                                                            'A' => ['A'],
+                                                            'B' => ['B'],
+                                                            'AB' => ['A', 'B'],
+                                                            default => [],
+                                                        };
+                                                    @endphp
                                                     <form class="purchase-form receipt-target-form" method="POST" action="{{ route('students.lesson-purchases.store', $student) }}" data-receipt-amount-field="amount_paid">
                                                         @csrf
                                                         <input type="hidden" name="tab" value="{{ $currentTab }}">
@@ -741,12 +749,11 @@
                                                         <div>
                                                             <label for="lesson_category_{{ $student->id }}">Categoria</label>
                                                             <select id="lesson_category_{{ $student->id }}" name="lesson_category" required>
-                                                                @if ($student->supportsLessonCategory('A'))
-                                                                    <option value="A">Aulas A</option>
-                                                                @endif
-                                                                @if ($student->supportsLessonCategory('B'))
-                                                                    <option value="B">Aulas B</option>
-                                                                @endif
+                                                                @forelse ($purchaseLessonCategories as $lessonCategory)
+                                                                    <option value="{{ $lessonCategory }}">Aulas {{ $lessonCategory }}</option>
+                                                                @empty
+                                                                    <option value="">Categoria do aluno não informada</option>
+                                                                @endforelse
                                                             </select>
                                                         </div>
                                                         <div>

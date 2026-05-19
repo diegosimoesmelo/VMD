@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class StudentController extends Controller
@@ -100,6 +101,7 @@ class StudentController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate($this->rules());
+        $validated = $this->normalizeStudentLessonQuantities($validated);
 
         $student = Student::create($validated);
         $student->matricula = Student::gerarMatricula((int) $student->id);
@@ -129,6 +131,7 @@ class StudentController extends Controller
     public function update(Request $request, Student $student): RedirectResponse
     {
         $validated = $request->validate($this->rules($student));
+        $validated = $this->normalizeStudentLessonQuantities($validated);
 
         $student->update($validated);
         $student->syncRemainingLessons();
@@ -169,7 +172,7 @@ class StudentController extends Controller
             'timeline_status' => ['nullable', 'string'],
         ]);
 
-        if (! $student->supportsLessonCategory($validated['lesson_category'])) {
+        if (! in_array($validated['lesson_category'], $this->allowedLessonCategories($student->categoria_pretendida), true)) {
             return redirect()
                 ->route('students.index', $request->only(['tab', 'search', 'teacher_id', 'timeline_status']))
                 ->withErrors(['lesson_category' => 'A categoria da compra nao e compativel com o cadastro do aluno.']);
@@ -263,5 +266,58 @@ class StudentController extends Controller
             'quantidade_aulas_b_contratadas' => ['nullable', 'integer', 'min:0'],
             'observacao' => ['nullable', 'string'],
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $validated
+     * @return array<string, mixed>
+     */
+    private function normalizeStudentLessonQuantities(array $validated): array
+    {
+        $category = $validated['categoria_pretendida'] ?? null;
+        $lessonsA = (int) ($validated['quantidade_aulas_a_contratadas'] ?? 0);
+        $lessonsB = (int) ($validated['quantidade_aulas_b_contratadas'] ?? 0);
+
+        if ($category === 'A' && $lessonsB > 0) {
+            throw ValidationException::withMessages([
+                'quantidade_aulas_b_contratadas' => 'Aluno da categoria A nao pode ter aulas B contratadas.',
+            ]);
+        }
+
+        if ($category === 'B' && $lessonsA > 0) {
+            throw ValidationException::withMessages([
+                'quantidade_aulas_a_contratadas' => 'Aluno da categoria B nao pode ter aulas A contratadas.',
+            ]);
+        }
+
+        if (! in_array($category, ['A', 'B', 'AB'], true) && ($lessonsA > 0 || $lessonsB > 0)) {
+            throw ValidationException::withMessages([
+                'categoria_pretendida' => 'Selecione a categoria do aluno antes de informar aulas contratadas.',
+            ]);
+        }
+
+        if ($category === 'A') {
+            $validated['quantidade_aulas_b_contratadas'] = null;
+        } elseif ($category === 'B') {
+            $validated['quantidade_aulas_a_contratadas'] = null;
+        } elseif (! in_array($category, ['A', 'B', 'AB'], true)) {
+            $validated['quantidade_aulas_a_contratadas'] = null;
+            $validated['quantidade_aulas_b_contratadas'] = null;
+        }
+
+        return $validated;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function allowedLessonCategories(?string $studentCategory): array
+    {
+        return match ($studentCategory) {
+            'A' => ['A'],
+            'B' => ['B'],
+            'AB' => ['A', 'B'],
+            default => [],
+        };
     }
 }

@@ -131,10 +131,17 @@ class AppointmentController extends Controller
 
         $appointment->delete();
         $this->syncStudentLessonBalance($studentId);
+        $student = $studentId ? Student::query()->find($studentId) : null;
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message' => 'Horario liberado com sucesso.',
+                'message' => 'Agendamento cancelado com sucesso.',
+                'student_balance' => $student ? [
+                    'a_contracted' => $student->quantidade_aulas_a_contratadas ?? 0,
+                    'a_remaining' => $student->quantidade_aulas_a_restantes ?? ($student->quantidade_aulas_a_contratadas ?? 0),
+                    'b_contracted' => $student->quantidade_aulas_b_contratadas ?? 0,
+                    'b_remaining' => $student->quantidade_aulas_b_restantes ?? ($student->quantidade_aulas_b_contratadas ?? 0),
+                ] : null,
                 'slot_html' => $this->renderSlotHtml(
                     null,
                     $vehicle,
@@ -145,6 +152,12 @@ class AppointmentController extends Controller
                     $vehicleCategory
                 ),
             ]);
+        }
+
+        if ($request->boolean('return_to_students')) {
+            return redirect()
+                ->route('students.index', $request->only(['tab', 'search', 'teacher_id', 'timeline_status']))
+                ->with('success', 'Agendamento cancelado com sucesso.');
         }
 
         return redirect()

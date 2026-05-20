@@ -366,6 +366,78 @@
             color: var(--color-muted-text);
             font-size: 13px;
         }
+        .sweet-confirm {
+            position: fixed;
+            inset: 0;
+            z-index: 120;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(15, 23, 42, 0.48);
+            backdrop-filter: blur(6px);
+        }
+        .sweet-confirm.is-open {
+            display: flex;
+        }
+        .sweet-confirm-card {
+            width: min(420px, 100%);
+            padding: 26px;
+            border-radius: 22px;
+            background: #fff;
+            border: 1px solid rgba(var(--color-secondary-rgb), 0.08);
+            box-shadow: var(--shadow-soft);
+            text-align: center;
+        }
+        .sweet-confirm-icon {
+            width: 54px;
+            height: 54px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+            border-radius: 999px;
+            background: rgba(239, 68, 68, 0.1);
+            color: #991b1b;
+            font-size: 28px;
+            font-weight: 800;
+        }
+        .sweet-confirm-title {
+            margin: 0 0 8px;
+            color: var(--color-secondary);
+            font-size: 20px;
+        }
+        .sweet-confirm-text {
+            margin: 0 0 20px;
+            color: var(--color-muted-text);
+            line-height: 1.5;
+        }
+        .sweet-confirm-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .sweet-toast {
+            position: fixed;
+            right: 22px;
+            bottom: 22px;
+            z-index: 130;
+            display: none;
+            max-width: 340px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: #166534;
+            color: #fff;
+            box-shadow: var(--shadow-soft);
+            font-weight: 700;
+        }
+        .sweet-toast.is-open {
+            display: block;
+        }
+        .sweet-toast.error {
+            background: #991b1b;
+        }
         .schedule-item {
             padding: 14px 16px;
             border-radius: 18px;
@@ -376,6 +448,24 @@
             display: block;
             margin-bottom: 6px;
             color: var(--color-secondary);
+        }
+        .schedule-actions {
+            margin-top: 12px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .schedule-cancel-button {
+            width: auto;
+            margin: 0;
+            padding: 9px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            background: rgba(239, 68, 68, 0.08);
+            color: #991b1b;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: none;
         }
         .schedule-status {
             display: inline-flex;
@@ -676,19 +766,19 @@
                                                 <div class="modal-tab-panel active" id="lessons-tab-{{ $student->id }}" role="tabpanel">
                                                     <div class="lesson-balance-grid">
                                                         <div class="lesson-balance-card">
-                                                            <strong>{{ $student->quantidade_aulas_a_contratadas ?? 0 }}</strong>
+                                                            <strong data-balance-field="a_contracted">{{ $student->quantidade_aulas_a_contratadas ?? 0 }}</strong>
                                                             <span>Aulas A contratadas</span>
                                                         </div>
                                                         <div class="lesson-balance-card">
-                                                            <strong>{{ $student->quantidade_aulas_a_restantes ?? ($student->quantidade_aulas_a_contratadas ?? 0) }}</strong>
+                                                            <strong data-balance-field="a_remaining">{{ $student->quantidade_aulas_a_restantes ?? ($student->quantidade_aulas_a_contratadas ?? 0) }}</strong>
                                                             <span>Aulas A restantes</span>
                                                         </div>
                                                         <div class="lesson-balance-card">
-                                                            <strong>{{ $student->quantidade_aulas_b_contratadas ?? 0 }}</strong>
+                                                            <strong data-balance-field="b_contracted">{{ $student->quantidade_aulas_b_contratadas ?? 0 }}</strong>
                                                             <span>Aulas B contratadas</span>
                                                         </div>
                                                         <div class="lesson-balance-card">
-                                                            <strong>{{ $student->quantidade_aulas_b_restantes ?? ($student->quantidade_aulas_b_contratadas ?? 0) }}</strong>
+                                                            <strong data-balance-field="b_remaining">{{ $student->quantidade_aulas_b_restantes ?? ($student->quantidade_aulas_b_contratadas ?? 0) }}</strong>
                                                             <span>Aulas B restantes</span>
                                                         </div>
                                                     </div>
@@ -707,7 +797,7 @@
                                                                         default => 'scheduled',
                                                                     };
                                                                 @endphp
-                                                                <div class="schedule-item">
+                                                            <div class="schedule-item" data-appointment-item="{{ $appointment->id }}">
                                                                     <strong>{{ $appointment->starts_at?->format('d/m/Y') }} as {{ $appointment->starts_at?->format('H:i') }}</strong>
                                                                     <span class="schedule-status {{ $lessonStatusClass }}">{{ $appointment->effectiveLessonStatusLabel() }}</span>
                                                                     <div>Professor: {{ $appointment->teacher?->nome ?: '-' }}</div>
@@ -718,12 +808,26 @@
                                                                     @if ($appointment->lesson_status_notes)
                                                                         <div>Status operacional: {{ $appointment->lesson_status_notes }}</div>
                                                                     @endif
-                                                                    @if ($appointment->notes)
-                                                                        <div>Observações: {{ $appointment->notes }}</div>
-                                                                    @endif
-                                                                </div>
-                                                            @endforeach
-                                                        </div>
+                                                                @if ($appointment->notes)
+                                                                    <div>Observações: {{ $appointment->notes }}</div>
+                                                                @endif
+                                                                @if ($appointment->starts_at?->isFuture())
+                                                                    <div class="schedule-actions">
+                                                                        <form class="inline-form cancel-appointment-form" method="POST" action="{{ route('appointments.destroy', $appointment) }}">
+                                                                            @csrf
+                                                                            @method('DELETE')
+                                                                            <input type="hidden" name="return_to_students" value="1">
+                                                                            <input type="hidden" name="tab" value="{{ $currentTab }}">
+                                                                            <input type="hidden" name="search" value="{{ $search }}">
+                                                                            <input type="hidden" name="teacher_id" value="{{ $teacherFilter }}">
+                                                                            <input type="hidden" name="timeline_status" value="{{ $timelineStatusFilter }}">
+                                                                            <button class="schedule-cancel-button" type="submit">Cancelar agendamento</button>
+                                                                        </form>
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
                                                     @endif
                                                 </div>
 
@@ -858,8 +962,161 @@
         </div>
     @endif
 
+    <div class="sweet-confirm" id="cancelAppointmentConfirm" aria-hidden="true">
+        <div class="sweet-confirm-card" role="dialog" aria-modal="true" aria-labelledby="cancelAppointmentConfirmTitle">
+            <div class="sweet-confirm-icon">!</div>
+            <h2 class="sweet-confirm-title" id="cancelAppointmentConfirmTitle">Cancelar agendamento?</h2>
+            <p class="sweet-confirm-text">Essa aula futura será removida da agenda e o saldo do aluno será atualizado.</p>
+            <div class="sweet-confirm-actions">
+                <button class="btn-secondary" type="button" data-sweet-cancel>Voltar</button>
+                <button class="schedule-cancel-button" type="button" data-sweet-confirm>Sim, cancelar</button>
+            </div>
+        </div>
+    </div>
+    <div class="sweet-toast" id="sweetToast" role="status" aria-live="polite"></div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            var pendingCancelForm = null;
+            var confirmDialog = document.getElementById('cancelAppointmentConfirm');
+            var toast = document.getElementById('sweetToast');
+
+            function openCancelConfirm(form) {
+                pendingCancelForm = form;
+
+                if (confirmDialog) {
+                    confirmDialog.classList.add('is-open');
+                    confirmDialog.setAttribute('aria-hidden', 'false');
+                }
+            }
+
+            function closeCancelConfirm() {
+                pendingCancelForm = null;
+
+                if (confirmDialog) {
+                    confirmDialog.classList.remove('is-open');
+                    confirmDialog.setAttribute('aria-hidden', 'true');
+                }
+            }
+
+            function showToast(message, type) {
+                if (! toast) {
+                    return;
+                }
+
+                toast.textContent = message;
+                toast.classList.toggle('error', type === 'error');
+                toast.classList.add('is-open');
+
+                window.setTimeout(function () {
+                    toast.classList.remove('is-open');
+                }, 3200);
+            }
+
+            function updateStudentBalance(form, balance) {
+                if (! balance) {
+                    return;
+                }
+
+                var modalBody = form.closest('.timeline-modal-body');
+
+                if (! modalBody) {
+                    return;
+                }
+
+                Object.keys(balance).forEach(function (key) {
+                    var target = modalBody.querySelector('[data-balance-field="' + key + '"]');
+
+                    if (target) {
+                        target.textContent = balance[key];
+                    }
+                });
+            }
+
+            function removeAppointmentItem(form) {
+                var item = form.closest('.schedule-item');
+                var list = form.closest('.schedule-list');
+
+                if (item) {
+                    item.remove();
+                }
+
+                if (list && ! list.querySelector('.schedule-item')) {
+                    var empty = document.createElement('div');
+                    empty.className = 'schedule-empty';
+                    empty.textContent = 'Nenhuma aula marcada para este aluno até o momento.';
+                    list.replaceWith(empty);
+                }
+            }
+
+            function submitCancelForm(form) {
+                var formData = new FormData(form);
+
+                form.querySelectorAll('button').forEach(function (button) {
+                    button.disabled = true;
+                });
+
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                })
+                    .then(function (response) {
+                        if (! response.ok) {
+                            throw new Error('Nao foi possivel cancelar o agendamento.');
+                        }
+
+                        return response.json();
+                    })
+                    .then(function (data) {
+                        updateStudentBalance(form, data.student_balance);
+                        removeAppointmentItem(form);
+                        showToast(data.message || 'Agendamento cancelado com sucesso.');
+                    })
+                    .catch(function () {
+                        showToast('Nao foi possivel cancelar o agendamento. Tente novamente.', 'error');
+                    })
+                    .finally(function () {
+                        form.querySelectorAll('button').forEach(function (button) {
+                            button.disabled = false;
+                        });
+                    });
+            }
+
+            document.querySelectorAll('.cancel-appointment-form').forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    event.preventDefault();
+                    openCancelConfirm(form);
+                });
+            });
+
+            document.querySelectorAll('[data-sweet-cancel]').forEach(function (button) {
+                button.addEventListener('click', closeCancelConfirm);
+            });
+
+            document.querySelectorAll('[data-sweet-confirm]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var form = pendingCancelForm;
+
+                    closeCancelConfirm();
+
+                    if (form) {
+                        submitCancelForm(form);
+                    }
+                });
+            });
+
+            if (confirmDialog) {
+                confirmDialog.addEventListener('click', function (event) {
+                    if (event.target === confirmDialog) {
+                        closeCancelConfirm();
+                    }
+                });
+            }
+
             document.querySelectorAll('[data-modal-target]').forEach(function (button) {
                 button.addEventListener('click', function () {
                     var modal = document.getElementById(button.getAttribute('data-modal-target'));
@@ -919,6 +1176,7 @@
 
             document.addEventListener('keydown', function (event) {
                 if (event.key === 'Escape') {
+                    closeCancelConfirm();
                     document.querySelectorAll('.timeline-modal.is-open').forEach(function (modal) {
                         modal.classList.remove('is-open');
                         modal.setAttribute('aria-hidden', 'true');

@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LessonMonitoringController;
 use App\Http\Controllers\ReceiptController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\StudentLessonReportController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleController;
@@ -46,6 +47,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/alunos/{student}/compras-aulas', [StudentController::class, 'storeLessonPurchase'])->name('students.lesson-purchases.store');
             Route::get('/alunos/{student}/recibo-cadastro', [ReceiptController::class, 'registration'])->name('students.receipts.registration.show');
             Route::get('/alunos/{student}/recibo-cadastro/pdf', [ReceiptController::class, 'registrationPdf'])->name('students.receipts.registration.download');
+            Route::get('/alunos/{student}/aulas/pdf', [StudentLessonReportController::class, 'download'])->name('students.lessons.pdf');
             Route::get('/compras-aulas/{purchase}/recibo', [ReceiptController::class, 'purchase'])->name('lesson-purchases.receipts.show');
             Route::get('/compras-aulas/{purchase}/recibo/pdf', [ReceiptController::class, 'purchasePdf'])->name('lesson-purchases.receipts.download');
             Route::get('/professores', [TeacherController::class, 'index'])->name('teachers.index');

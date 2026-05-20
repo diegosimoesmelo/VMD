@@ -290,6 +290,26 @@
             gap: 12px;
             margin-bottom: 18px;
         }
+        .lesson-export-form {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+            align-items: end;
+            padding: 16px;
+            margin-bottom: 18px;
+            border-radius: 18px;
+            background: rgba(var(--color-secondary-rgb), 0.04);
+            border: 1px solid rgba(var(--color-secondary-rgb), 0.08);
+        }
+        .lesson-export-form label {
+            display: block;
+            margin-bottom: 7px;
+            color: var(--color-muted-text);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
         .lesson-balance-card {
             padding: 14px 16px;
             border-radius: 18px;
@@ -520,6 +540,9 @@
             }
             .lesson-balance-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .lesson-export-form {
+                grid-template-columns: 1fr;
             }
             .purchase-form {
                 grid-template-columns: 1fr;
@@ -764,6 +787,28 @@
                                                 </div>
 
                                                 <div class="modal-tab-panel active" id="lessons-tab-{{ $student->id }}" role="tabpanel">
+                                                    @php
+                                                        $exportLessonCategories = match ($student->categoria_pretendida) {
+                                                            'A' => ['A' => 'Categoria A'],
+                                                            'B' => ['B' => 'Categoria B'],
+                                                            'AB' => ['AB' => 'Categorias A e B', 'A' => 'Somente categoria A', 'B' => 'Somente categoria B'],
+                                                            default => [],
+                                                        };
+                                                    @endphp
+                                                    <form class="lesson-export-form" method="GET" action="{{ route('students.lessons.pdf', $student) }}" target="_blank" rel="noopener">
+                                                        <div>
+                                                            <label for="lesson_export_category_{{ $student->id }}">Exportar aulas</label>
+                                                            <select id="lesson_export_category_{{ $student->id }}" name="category" required>
+                                                                @forelse ($exportLessonCategories as $categoryValue => $categoryLabel)
+                                                                    <option value="{{ $categoryValue }}">{{ $categoryLabel }}</option>
+                                                                @empty
+                                                                    <option value="">Categoria do aluno não informada</option>
+                                                                @endforelse
+                                                            </select>
+                                                        </div>
+                                                        <button class="btn" type="submit" @disabled(empty($exportLessonCategories))>Exportar PDF</button>
+                                                    </form>
+
                                                     <div class="lesson-balance-grid">
                                                         <div class="lesson-balance-card">
                                                             <strong data-balance-field="a_contracted">{{ $student->quantidade_aulas_a_contratadas ?? 0 }}</strong>

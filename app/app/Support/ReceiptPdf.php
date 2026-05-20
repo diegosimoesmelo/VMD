@@ -53,7 +53,7 @@ class ReceiptPdf
             [$copyLabel, 448, $top, 9, false],
             [(string) ($school['name'] ?? 'Autoescola'), 48, $top - 24, 12, true],
             [(string) ($school['address'] ?? ''), 48, $top - 40, 9, false],
-            [trim('Documento: '.($school['document'] ?? '').'  Telefone: '.($school['phone'] ?? '')), 48, $top - 54, 9, false],
+            [trim('Telefone: '.($school['phone'] ?? '')), 48, $top - 54, 9, false],
             ['Recibo: '.($receipt['number'] ?? '-'), 48, $top - 82, 10, true],
             ['Data: '.self::formatDate($receipt['date'] ?? null), 390, $top - 82, 10, false],
             ['Recebemos de: '.($receipt['student_name'] ?? '-'), 48, $top - 108, 10, false],

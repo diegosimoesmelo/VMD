@@ -151,9 +151,9 @@
                             <h1 class="school-name">{{ $receipt['school']['name'] }}</h1>
                             <div class="school-info">{{ $receipt['school']['address'] }}</div>
                             <div class="school-info">
-                                @if (! empty($receipt['school']['document']))
+                                <!-- @if (! empty($receipt['school']['document']))
                                     Documento: {{ $receipt['school']['document'] }}
-                                @endif
+                                @endif -->
                                 @if (! empty($receipt['school']['phone']))
                                     Telefone: {{ $receipt['school']['phone'] }}
                                 @endif

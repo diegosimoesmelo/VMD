@@ -37,11 +37,20 @@ class StudentController extends Controller
 
         if ($request->filled('search')) {
             $search = trim((string) $request->string('search'));
+            $normalizedSearch = mb_strtolower($search);
+            $searchDigits = preg_replace('/\D+/', '', $search);
 
-            $baseQuery->where(function ($query) use ($search) {
+            $baseQuery->where(function ($query) use ($search, $normalizedSearch, $searchDigits) {
                 $query
-                    ->where('nome', 'like', '%'.$search.'%')
+                    ->whereRaw('LOWER(nome) LIKE ?', ['%'.$normalizedSearch.'%'])
                     ->orWhere('cpf', 'like', '%'.$search.'%');
+
+                if ($searchDigits !== '') {
+                    $query->orWhereRaw(
+                        "REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') LIKE ?",
+                        ['%'.$searchDigits.'%']
+                    );
+                }
             });
         }
 

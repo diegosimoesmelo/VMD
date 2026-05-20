@@ -607,11 +607,8 @@
                                     <div class="action-stack">
                                         <a class="btn-secondary" href="{{ route('students.edit', $student) }}">Editar</a>
                                         <button class="modal-trigger" type="button" data-modal-target="appointments-modal-{{ $student->id }}">
-                                            Aulas e compras
+                                            Detalhes
                                         </button>
-                                        @if (($student->valor_pago ?? 0) > 0)
-                                            <a class="btn-secondary" href="{{ route('students.receipts.registration.show', $student) }}" target="_blank" rel="noopener">Recibo</a>
-                                        @endif
                                         @if ($student->nextStatus())
                                             <form class="inline-form" method="POST" action="{{ route('students.advance-status', $student) }}">
                                                 @csrf
@@ -665,14 +662,15 @@
                                             <div class="timeline-modal-header">
                                                 <div>
                                                     <h2 class="timeline-modal-title" id="appointments-modal-title-{{ $student->id }}">{{ $student->nome }}</h2>
-                                                    <p>Aulas contratadas, compras adicionais e horários já marcados para este aluno.</p>
+                                                    <p>Aulas, compras e recibos vinculados a este aluno.</p>
                                                 </div>
                                                 <button class="timeline-close" type="button" data-modal-close aria-label="Fechar">&times;</button>
                                             </div>
                                             <div class="timeline-modal-body">
-                                                <div class="modal-tabs" role="tablist" aria-label="Aulas e compras de {{ $student->nome }}">
+                                                <div class="modal-tabs" role="tablist" aria-label="Detalhes de {{ $student->nome }}">
                                                     <button class="modal-tab active" type="button" role="tab" aria-selected="true" data-tab-target="lessons-tab-{{ $student->id }}">Aulas</button>
                                                     <button class="modal-tab" type="button" role="tab" aria-selected="false" data-tab-target="purchases-tab-{{ $student->id }}">Compras</button>
+                                                    <button class="modal-tab" type="button" role="tab" aria-selected="false" data-tab-target="receipts-tab-{{ $student->id }}">Recibos</button>
                                                 </div>
 
                                                 <div class="modal-tab-panel active" id="lessons-tab-{{ $student->id }}" role="tabpanel">
@@ -803,12 +801,45 @@
                                                                         <div>{{ $purchase->notes }}</div>
                                                                     @endif
                                                                     @if ($purchase->amount_paid !== null)
-                                                                        <div>
-                                                                            <a class="modal-trigger" href="{{ route('lesson-purchases.receipts.show', $purchase) }}" target="_blank" rel="noopener">Ver recibo</a>
-                                                                        </div>
+                                                                        <div>Recibo disponível na aba Recibos.</div>
                                                                     @endif
                                                                 </div>
                                                             @endforeach
+                                                        @endif
+                                                    </div>
+                                                </div>
+
+                                                <div class="modal-tab-panel" id="receipts-tab-{{ $student->id }}" role="tabpanel">
+                                                    <div class="purchase-history">
+                                                        <h3>Recibos</h3>
+                                                        @if (($student->valor_pago ?? 0) > 0)
+                                                            <div class="purchase-item">
+                                                                <strong>Recibo do cadastro</strong>
+                                                                <span>
+                                                                    {{ $student->created_at?->format('d/m/Y H:i') }}
+                                                                    - R$ {{ number_format((float) $student->valor_pago, 2, ',', '.') }}
+                                                                </span>
+                                                                <div>
+                                                                    <a class="modal-trigger" href="{{ route('students.receipts.registration.show', $student) }}" target="_blank" rel="noopener">Abrir recibo</a>
+                                                                </div>
+                                                            </div>
+                                                        @endif
+
+                                                        @foreach ($student->lessonPurchases->whereNotNull('amount_paid') as $purchase)
+                                                            <div class="purchase-item">
+                                                                <strong>Compra de {{ $purchase->quantity }} aula{{ $purchase->quantity === 1 ? '' : 's' }} {{ $purchase->lesson_category }}</strong>
+                                                                <span>
+                                                                    {{ $purchase->purchased_at?->format('d/m/Y H:i') }}
+                                                                    - R$ {{ number_format((float) $purchase->amount_paid, 2, ',', '.') }}
+                                                                </span>
+                                                                <div>
+                                                                    <a class="modal-trigger" href="{{ route('lesson-purchases.receipts.show', $purchase) }}" target="_blank" rel="noopener">Abrir recibo</a>
+                                                                </div>
+                                                            </div>
+                                                        @endforeach
+
+                                                        @if (($student->valor_pago ?? 0) <= 0 && $student->lessonPurchases->whereNotNull('amount_paid')->isEmpty())
+                                                            <div class="schedule-empty">Nenhum recibo disponível para este aluno.</div>
                                                         @endif
                                                     </div>
                                                 </div>

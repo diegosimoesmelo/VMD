@@ -62,7 +62,7 @@ class ReceiptController extends Controller
             'notes' => $student->observacao,
             'issued_by' => auth()->user()?->name ?: auth()->user()?->username,
             'items' => array_values(array_filter([
-                $student->servico_oferecido ? 'Servico: '.$this->serviceLabel($student->servico_oferecido) : null,
+                $student->servico_oferecido ? 'Serviço: '.$this->serviceLabel($student->servico_oferecido) : null,
                 $student->categoria_pretendida ? 'Categoria: '.$student->categoria_pretendida : null,
                 $student->quantidade_aulas_a_contratadas !== null ? 'Aulas A contratadas: '.$student->quantidade_aulas_a_contratadas : null,
                 $student->quantidade_aulas_b_contratadas !== null ? 'Aulas B contratadas: '.$student->quantidade_aulas_b_contratadas : null,
@@ -106,7 +106,7 @@ class ReceiptController extends Controller
     private function paymentMethodLabel(?string $paymentMethod): string
     {
         if (! $paymentMethod) {
-            return 'Nao informado';
+            return 'Não informado';
         }
 
         return config('receipt.payment_methods')[$paymentMethod] ?? $paymentMethod;
@@ -115,10 +115,10 @@ class ReceiptController extends Controller
     private function serviceLabel(string $service): string
     {
         return [
-            'primeira_habilitacao' => 'Primeira habilitacao',
-            'adicao_categoria' => 'Adicao de categoria',
+            'primeira_habilitacao' => 'Primeira habilitação',
+            'adicao_categoria' => 'Adição de categoria',
             'aula_habilitado' => 'Aula para habilitado',
-            'prova_atualizacao' => 'Prova de Atualizacao',
+            'prova_atualizacao' => 'Prova de Atualização',
             'prova_reciclagem' => 'Prova de Reciclagem',
         ][$service] ?? $service;
     }

@@ -59,7 +59,7 @@ class ReceiptPdf
             ['Recebemos de: '.($receipt['student_name'] ?? '-'), 48, $top - 108, 10, false],
             ['CPF: '.($receipt['student_document'] ?? '-'), 390, $top - 108, 10, false],
             ['Referente a: '.($receipt['description'] ?? '-'), 48, $top - 132, 10, false],
-            ['Forma de pagamento: '.($receipt['payment_method'] ?? 'Nao informado'), 48, $top - 156, 10, false],
+            ['Forma de pagamento: '.($receipt['payment_method'] ?? 'Não informado'), 48, $top - 156, 10, false],
             ['Valor: R$ '.self::money($receipt['amount'] ?? null), 390, $top - 156, 12, true],
         ];
 
@@ -80,7 +80,7 @@ class ReceiptPdf
 
         $notes = trim((string) ($receipt['notes'] ?? ''));
         if ($notes !== '') {
-            $content .= self::text('Observacao: '.self::limit($notes, 110), 48, $top - 270, 9, false);
+            $content .= self::text('Observação: '.self::limit($notes, 110), 48, $top - 270, 9, false);
         }
 
         $content .= self::line(342, $top - 308, 526, $top - 308)

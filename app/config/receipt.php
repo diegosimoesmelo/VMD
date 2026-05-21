@@ -3,7 +3,7 @@
 return [
     'school' => [
         'name' => env('AUTO_SCHOOL_NAME', env('APP_NAME', 'Autoescola')),
-        'address' => env('AUTO_SCHOOL_ADDRESS', 'Endereco da autoescola nao configurado'),
+        'address' => env('AUTO_SCHOOL_ADDRESS', 'Endereço da autoescola não configurado'),
         'document' => env('AUTO_SCHOOL_DOCUMENT'),
         'phone' => env('AUTO_SCHOOL_PHONE'),
     ],
@@ -11,10 +11,10 @@ return [
     'payment_methods' => [
         'dinheiro' => 'Dinheiro',
         'pix' => 'Pix',
-        'cartao_debito' => 'Cartao de debito',
-        'cartao_credito' => 'Cartao de credito',
+        'cartao_debito' => 'Cartão de débito',
+        'cartao_credito' => 'Cartão de crédito',
         'boleto' => 'Boleto',
-        'transferencia' => 'Transferencia',
+        'transferencia' => 'Transferência',
         'outro' => 'Outro',
     ],
 ];

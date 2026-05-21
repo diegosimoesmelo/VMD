@@ -310,6 +310,46 @@
             text-transform: uppercase;
             letter-spacing: 0.04em;
         }
+        .profile-export-card {
+            display: grid;
+            gap: 12px;
+            padding: 18px;
+            border-radius: 18px;
+            background: rgba(var(--color-secondary-rgb), 0.04);
+            border: 1px solid rgba(var(--color-secondary-rgb), 0.08);
+        }
+        .profile-export-card h3 {
+            margin: 0;
+            color: var(--color-secondary);
+            font-size: 18px;
+        }
+        .profile-export-card p {
+            margin: 0;
+            color: var(--color-muted-text);
+            line-height: 1.5;
+        }
+        .profile-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 6px;
+        }
+        .profile-summary-item {
+            padding: 12px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.78);
+            border: 1px solid rgba(var(--color-secondary-rgb), 0.08);
+        }
+        .profile-summary-item span {
+            display: block;
+            margin-bottom: 4px;
+            color: var(--color-muted-text);
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .profile-summary-item strong {
+            color: var(--color-secondary);
+        }
         .lesson-balance-card {
             padding: 14px 16px;
             border-radius: 18px;
@@ -542,6 +582,9 @@
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
             .lesson-export-form {
+                grid-template-columns: 1fr;
+            }
+            .profile-summary-grid {
                 grid-template-columns: 1fr;
             }
             .purchase-form {
@@ -784,6 +827,7 @@
                                                     <button class="modal-tab active" type="button" role="tab" aria-selected="true" data-tab-target="lessons-tab-{{ $student->id }}">Aulas</button>
                                                     <button class="modal-tab" type="button" role="tab" aria-selected="false" data-tab-target="purchases-tab-{{ $student->id }}">Compras</button>
                                                     <button class="modal-tab" type="button" role="tab" aria-selected="false" data-tab-target="receipts-tab-{{ $student->id }}">Recibos</button>
+                                                    <button class="modal-tab" type="button" role="tab" aria-selected="false" data-tab-target="profile-tab-{{ $student->id }}">Ficha</button>
                                                 </div>
 
                                                 <div class="modal-tab-panel active" id="lessons-tab-{{ $student->id }}" role="tabpanel">
@@ -990,6 +1034,30 @@
                                                         @if (($student->valor_pago ?? 0) <= 0 && $student->lessonPurchases->whereNotNull('amount_paid')->isEmpty())
                                                             <div class="schedule-empty">Nenhum recibo disponível para este aluno.</div>
                                                         @endif
+                                                    </div>
+                                                </div>
+
+                                                <div class="modal-tab-panel" id="profile-tab-{{ $student->id }}" role="tabpanel">
+                                                    <div class="profile-export-card">
+                                                        <h3>Ficha cadastral</h3>
+                                                        <p>Exporte um PDF com os principais dados de cadastro, endereço, contato, filiação, serviço contratado, aulas e observações do aluno.</p>
+                                                        <div class="profile-summary-grid">
+                                                            <div class="profile-summary-item">
+                                                                <span>Matrícula</span>
+                                                                <strong>{{ $student->matricula ?: '-' }}</strong>
+                                                            </div>
+                                                            <div class="profile-summary-item">
+                                                                <span>CPF</span>
+                                                                <strong>{{ $student->cpf ?: '-' }}</strong>
+                                                            </div>
+                                                            <div class="profile-summary-item">
+                                                                <span>Categoria</span>
+                                                                <strong>{{ $student->categoria_pretendida ?: '-' }}</strong>
+                                                            </div>
+                                                        </div>
+                                                        <div class="purchase-actions">
+                                                            <a class="btn" href="{{ route('students.profile.pdf', $student) }}" target="_blank" rel="noopener">Exportar ficha PDF</a>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>

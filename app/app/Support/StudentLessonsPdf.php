@@ -38,24 +38,24 @@ class StudentLessonsPdf
         $school = config('receipt.school');
         $content = self::text((string) ($school['name'] ?? 'Autoescola'), 40, 555, 15, true)
             .self::text((string) ($school['address'] ?? ''), 40, 538, 9)
-            .self::text('RELATORIO DE AULAS AGENDADAS', 324, 555, 14, true)
-            .self::text('Pagina '.$page.' de '.$pageCount, 724, 555, 9)
+            .self::text('RELATÓRIO DE AULAS AGENDADAS', 324, 555, 14, true)
+            .self::text('Página '.$page.' de '.$pageCount, 724, 555, 9)
             .self::line(40, 524, 802, 524)
             .self::text('Aluno: '.$student->nome, 40, 504, 10, true)
             .self::text('CPF: '.($student->cpf ?: '-'), 40, 488, 9)
-            .self::text('Matricula: '.($student->matricula ?: '-'), 235, 488, 9)
+            .self::text('Matrícula: '.($student->matricula ?: '-'), 235, 488, 9)
             .self::text('Categoria exportada: '.($category === 'AB' ? 'A e B' : $category), 430, 488, 9)
             .self::text('Emitido em: '.now()->format('d/m/Y H:i'), 625, 488, 9);
 
         $headers = [
             ['#', 40, 454, 26],
             ['Data', 66, 454, 72],
-            ['Horario', 138, 454, 80],
+            ['Horário', 138, 454, 80],
             ['Cat.', 218, 454, 44],
             ['Professor', 262, 454, 190],
-            ['Veiculo', 452, 454, 82],
+            ['Veículo', 452, 454, 82],
             ['Status', 534, 454, 126],
-            ['Observacao', 660, 454, 142],
+            ['Observação', 660, 454, 142],
         ];
 
         $content .= self::box(40, 436, 762, 26, true);
@@ -76,7 +76,7 @@ class StudentLessonsPdf
             $content .= self::text($appointment->lesson_category ?: '-', 222, $y, 8);
             $content .= self::text(self::limit($appointment->teacher?->nome ?: '-', 34), 266, $y, 8);
             $content .= self::text(self::limit($appointment->vehicle ? strtoupper($appointment->vehicle->placa) : '-', 14), 456, $y, 8);
-            $content .= self::text(self::limit($appointment->effectiveLessonStatusLabel(), 22), 538, $y, 8);
+            $content .= self::text(self::limit(self::lessonStatusLabel($appointment), 22), 538, $y, 8);
             $content .= self::text(self::limit($appointment->notes ?: $appointment->lesson_status_notes ?: '-', 25), 664, $y, 8);
             $y -= 22;
         }
@@ -129,6 +129,16 @@ class StudentLessonsPdf
         $end = $appointment->ends_at?->format('H:i');
 
         return $end ? $start.' - '.$end : $start;
+    }
+
+    private static function lessonStatusLabel(Appointment $appointment): string
+    {
+        return [
+            Appointment::LESSON_STATUS_SCHEDULED => 'Agendada',
+            Appointment::LESSON_STATUS_COMPLETED => 'Aula concluída',
+            Appointment::LESSON_STATUS_STUDENT_ABSENT => 'Aluno não compareceu',
+            Appointment::LESSON_STATUS_VEHICLE_ISSUE => 'Problema com o carro',
+        ][$appointment->effectiveLessonStatus()] ?? '-';
     }
 
     private static function text(string $text, int $x, int $y, int $size = 10, bool $bold = false): string

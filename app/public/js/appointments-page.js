@@ -39,6 +39,20 @@
         }
     }
 
+    function showMessage(message, type = "success") {
+        const content = getContentElement();
+        if (!content || typeof message !== "string" || message.trim() === "") {
+            return;
+        }
+
+        const notice = document.createElement("p");
+        notice.className = `notice ${type === "error" ? "notice-error" : "notice-success"}`;
+        notice.textContent = message;
+        content.prepend(notice);
+
+        window.setTimeout(() => notice.remove(), 4000);
+    }
+
     function replaceSlot(form, html) {
         if (typeof html !== "string" || html.trim() === "") {
             return;
@@ -79,10 +93,12 @@
         const payload = await parseJson(response);
 
         if (!response.ok) {
+            showMessage(payload.message || "Nao foi possivel salvar este horario.", "error");
             return;
         }
 
         replaceSlot(form, payload.slot_html);
+        showMessage(payload.message || "Agenda atualizada com sucesso.");
     }
 
     async function submitDeleteForm(form) {
@@ -96,32 +112,38 @@
         const payload = await parseJson(response);
 
         if (!response.ok) {
+            showMessage(payload.message || "Nao foi possivel liberar este horario.", "error");
             return;
         }
 
         replaceSlot(form, payload.slot_html);
+        showMessage(payload.message || "Agendamento cancelado com sucesso.");
+    }
+
+    function requestFilterForm(form) {
+        requestAgenda(form.action + "?" + new URLSearchParams(new FormData(form)).toString())
+            .catch((error) => showMessage(error.message, "error"));
     }
 
     document.addEventListener("submit", (event) => {
         const filterForm = event.target.closest("form[data-agenda-filter-form]");
         if (filterForm) {
             event.preventDefault();
-            requestAgenda(filterForm.action + "?" + new URLSearchParams(new FormData(filterForm)).toString())
-                .catch(() => {});
+            requestFilterForm(filterForm);
             return;
         }
 
         const slotForm = event.target.closest("form.slot-form");
         if (slotForm) {
             event.preventDefault();
-            submitSlotForm(slotForm).catch(() => {});
+            submitSlotForm(slotForm).catch((error) => showMessage(error.message, "error"));
             return;
         }
 
         const deleteForm = event.target.closest("form.slot-delete-form");
         if (deleteForm) {
             event.preventDefault();
-            submitDeleteForm(deleteForm).catch(() => {});
+            submitDeleteForm(deleteForm).catch((error) => showMessage(error.message, "error"));
         }
     });
 
@@ -132,6 +154,18 @@
         }
 
         event.preventDefault();
-        requestAgenda(navLink.href).catch(() => {});
+        requestAgenda(navLink.href).catch((error) => showMessage(error.message, "error"));
+    });
+
+    document.addEventListener("change", (event) => {
+        const modeInput = event.target.closest('input[name="schedule_mode"]');
+        if (!modeInput) {
+            return;
+        }
+
+        const filterForm = modeInput.closest("form[data-agenda-filter-form]");
+        if (filterForm) {
+            requestFilterForm(filterForm);
+        }
     });
 })();

@@ -13,12 +13,80 @@
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
-            align-items: end;
+            align-items: flex-end;
             width: 100%;
         }
         .agenda-toolbar .field-inline {
             min-width: 220px;
             flex: 1 1 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+        .agenda-toolbar select,
+        .agenda-toolbar input[type="date"] {
+            min-height: 48px;
+            margin-bottom: 0;
+        }
+        .filter-label {
+            display: block;
+            color: var(--color-secondary);
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .agenda-mode-radio {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+            min-height: 48px;
+        }
+        .agenda-mode-radio label {
+            cursor: pointer;
+        }
+        .agenda-mode-radio input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .agenda-mode-radio span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(var(--color-secondary-rgb), 0.14);
+            background: rgba(255, 255, 255, 0.92);
+            color: var(--color-secondary);
+            font-size: 14px;
+            font-weight: 700;
+            text-align: center;
+        }
+        .agenda-mode-radio input:checked + span {
+            background: var(--color-secondary);
+            border-color: var(--color-secondary);
+            color: #fff;
+        }
+        .agenda-mode-radio input:focus-visible + span {
+            outline: 3px solid rgba(var(--color-secondary-rgb), 0.22);
+            outline-offset: 2px;
+        }
+        .agenda-toolbar-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex: 0 0 auto;
+            min-height: 48px;
+            padding-bottom: 0;
+        }
+        .agenda-toolbar-actions .btn,
+        .agenda-toolbar-actions .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            white-space: nowrap;
         }
         .vehicle-summary {
             display: flex;
@@ -106,6 +174,24 @@
             font-size: 12px;
             font-weight: 700;
         }
+        .teacher-focus-banner {
+            display: grid;
+            gap: 4px;
+            padding: 16px 18px;
+            margin-bottom: 18px;
+            border-radius: 18px;
+            background: rgba(var(--color-secondary-rgb), 0.06);
+            border: 1px solid rgba(var(--color-secondary-rgb), 0.10);
+        }
+        .teacher-focus-banner span,
+        .teacher-focus-banner small {
+            color: var(--color-text-muted);
+            font-size: 13px;
+        }
+        .teacher-focus-banner strong {
+            color: var(--color-secondary);
+            font-size: 24px;
+        }
         .agenda-week-nav {
             display: flex;
             gap: 12px;
@@ -158,6 +244,10 @@
             background: rgba(var(--color-secondary-rgb), 0.08);
             border-color: rgba(var(--color-secondary-rgb), 0.14);
         }
+        .slot-card.locked {
+            background: rgba(148, 163, 184, 0.14);
+            border-color: rgba(100, 116, 139, 0.24);
+        }
         .slot-status {
             display: inline-flex;
             align-items: center;
@@ -180,10 +270,22 @@
             background: rgba(var(--color-secondary-rgb), 0.10);
             color: var(--color-secondary);
         }
+        .slot-status.locked {
+            background: rgba(100, 116, 139, 0.14);
+            color: #334155;
+        }
         .slot-meta strong {
             display: block;
             color: var(--color-secondary);
             margin-bottom: 4px;
+        }
+        .slot-fixed-field {
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(var(--color-secondary-rgb), 0.06);
+            color: var(--color-secondary);
+            font-size: 14px;
+            font-weight: 700;
         }
         .slot-form {
             display: grid;
@@ -221,9 +323,9 @@
 
     <div class="page-header">
         <div class="header-copy">
-            <span class="eyebrow">Agenda de veículos</span>
-            <h1>Planejamento semanal orientado pelo veículo</h1>
-            <p>O agendamento principal agora usa a grade do veículo. Em cada horário, você escolhe o professor da aula e acompanha a agenda semanal resumida de cada professor com aluno e veículo.</p>
+            <span class="eyebrow">Agenda</span>
+            <h1>Planejamento semanal por veículo ou instrutor</h1>
+            <p>Escolha se deseja montar a grade pelo veículo ou pelo instrutor. O sistema bloqueia horários já ocupados para evitar conflito entre aluno, professor e carro.</p>
             <div class="header-stats">
                 <div class="stat-chip">
                     <strong>{{ $vehicles->count() }}</strong>

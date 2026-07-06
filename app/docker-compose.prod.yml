@@ -1,0 +1,70 @@
+services:
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      app:
+        condition: service_started
+
+  app:
+    build:
+      context: .
+    image: vmd-production
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    expose:
+      - "80"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-vmd}
+      POSTGRES_USER: ${DB_USERNAME:-vmd_app}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    volumes:
+      - vmd-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    volumes:
+      - ./backups:/backups
+    command: >
+      sh -c 'while true; do
+        export PGPASSWORD="$${DB_PASSWORD}";
+        pg_dump -h db -U "$${DB_USERNAME}" -d "$${DB_DATABASE}" -Fc -f "/backups/vmd_$$(date +%Y%m%d_%H%M%S).dump";
+        find /backups -type f -name "*.dump" -mtime +14 -delete;
+        sleep 86400;
+      done'
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  vmd-postgres-data:
+  caddy-data:
+  caddy-config:

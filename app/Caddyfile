@@ -1,0 +1,4 @@
+{$APP_SITE_ADDRESS} {
+    encode gzip zstd
+    reverse_proxy app:80
+}

@@ -93,13 +93,14 @@ APP_URL=http://161.97.120.221
 APP_SITE_ADDRESS=:80
 APP_DOMAIN=
 DB_PASSWORD=senha_forte
+POSTGRES_PASSWORD=senha_forte
 MAIL_*
 ```
 
 Gere a chave:
 
 ```bash
-docker compose -f docker-compose.prod.yml run --rm app php artisan key:generate --show
+docker compose --env-file .env.production -f docker-compose.prod.yml run --rm app php artisan key:generate --show
 ```
 
 Copie o valor gerado para `APP_KEY` no `.env.production`.
@@ -107,15 +108,15 @@ Copie o valor gerado para `APP_KEY` no `.env.production`.
 Suba o ambiente:
 
 ```bash
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
 ```
 
 Verifique:
 
 ```bash
-docker compose -f docker-compose.prod.yml ps
-docker compose -f docker-compose.prod.yml logs -f app
-docker compose -f docker-compose.prod.yml logs -f caddy
+docker compose --env-file .env.production -f docker-compose.prod.yml ps
+docker compose --env-file .env.production -f docker-compose.prod.yml logs -f app
+docker compose --env-file .env.production -f docker-compose.prod.yml logs -f caddy
 ```
 
 ## Atualizar versao
@@ -123,8 +124,8 @@ docker compose -f docker-compose.prod.yml logs -f caddy
 ```bash
 cd /opt/vmd/app
 git pull
-docker compose -f docker-compose.prod.yml up -d --build
-docker compose -f docker-compose.prod.yml exec app php artisan migrate --force
+docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
+docker compose --env-file .env.production -f docker-compose.prod.yml exec app php artisan migrate --force
 ```
 
 ## Backup

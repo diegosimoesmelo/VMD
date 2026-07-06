@@ -1,7 +1,7 @@
 services:
   caddy:
     image: caddy:2.8-alpine
-    restart: unless-stopped
+    restart: always
     env_file:
       - .env.production
     ports:
@@ -20,7 +20,7 @@ services:
     build:
       context: .
     image: vmd-production
-    restart: unless-stopped
+    restart: always
     env_file:
       - .env.production
     expose:
@@ -31,13 +31,9 @@ services:
 
   db:
     image: postgres:16-alpine
-    restart: unless-stopped
+    restart: always
     env_file:
       - .env.production
-    environment:
-      POSTGRES_DB: ${DB_DATABASE:-vmd}
-      POSTGRES_USER: ${DB_USERNAME:-vmd_app}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
     volumes:
       - vmd-postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -48,7 +44,7 @@ services:
 
   backup:
     image: postgres:16-alpine
-    restart: unless-stopped
+    restart: always
     env_file:
       - .env.production
     volumes:

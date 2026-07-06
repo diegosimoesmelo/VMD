@@ -147,6 +147,12 @@ Username: vmd_app
 Password: mesma senha de DB_PASSWORD/POSTGRES_PASSWORD
 ```
 
+O PostgreSQL continua privado dentro da rede Docker. Se a porta 5432 tiver sido liberada no firewall durante testes, remova:
+
+```bash
+ufw delete allow 5432/tcp
+```
+
 ## Atualizar versao
 
 ```bash

@@ -75,7 +75,7 @@ ufw --force enable
 ```bash
 mkdir -p /opt/vmd
 cd /opt/vmd
-git clone URL_DO_REPOSITORIO .
+git clone https://github.com/diegosimoesmelo/VMD.git .
 cd app
 cp .env.production.example .env.production
 ```

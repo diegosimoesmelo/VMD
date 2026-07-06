@@ -67,6 +67,7 @@ apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker
 ufw allow OpenSSH
 ufw allow 80/tcp
 ufw allow 443/tcp
+ufw allow 5050/tcp
 ufw --force enable
 ```
 
@@ -94,13 +95,15 @@ APP_SITE_ADDRESS=:80
 APP_DOMAIN=
 DB_PASSWORD=senha_forte
 POSTGRES_PASSWORD=senha_forte
+PGADMIN_DEFAULT_EMAIL=admin@vmd.local
+PGADMIN_DEFAULT_PASSWORD=senha_forte_do_pgadmin
 MAIL_*
 ```
 
 Gere a chave:
 
 ```bash
-docker compose --env-file .env.production -f docker-compose.prod.yml run --rm app php artisan key:generate --show
+docker compose --env-file .env.production -f docker-compose.prod.yml run --rm --entrypoint php app artisan key:generate --show
 ```
 
 Copie o valor gerado para `APP_KEY` no `.env.production`.
@@ -117,6 +120,31 @@ Verifique:
 docker compose --env-file .env.production -f docker-compose.prod.yml ps
 docker compose --env-file .env.production -f docker-compose.prod.yml logs -f app
 docker compose --env-file .env.production -f docker-compose.prod.yml logs -f caddy
+```
+
+## pgAdmin
+
+O pgAdmin fica disponivel em:
+
+```text
+http://161.97.120.221:5050
+```
+
+Entre com:
+
+```env
+PGADMIN_DEFAULT_EMAIL=admin@vmd.local
+PGADMIN_DEFAULT_PASSWORD=senha_forte_do_pgadmin
+```
+
+Para cadastrar o servidor PostgreSQL no pgAdmin:
+
+```text
+Host: db
+Port: 5432
+Database: vmd
+Username: vmd_app
+Password: mesma senha de DB_PASSWORD/POSTGRES_PASSWORD
 ```
 
 ## Atualizar versao

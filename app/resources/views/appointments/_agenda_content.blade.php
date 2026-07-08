@@ -57,6 +57,7 @@
                 </select>
             </div>
 
+            @if ($scheduleMode !== 'teacher')
             <div class="field-inline">
                 <label for="vehicle">Veículo</label>
                 <select id="vehicle" name="vehicle">
@@ -68,6 +69,7 @@
                     @endforeach
                 </select>
             </div>
+            @endif
 
             <div class="field-inline">
                 <label for="week_start">Semana de referência</label>
@@ -81,21 +83,21 @@
         </form>
     </div>
 
-    @if ($hasAgendaSelection && $selectedVehicle)
+    @if ($hasAgendaSelection)
         <div class="vehicle-hero">
             <div class="vehicle-hero-card">
                 <span class="eyebrow">{{ $scheduleMode === 'teacher' ? 'Instrutor em foco' : 'Veículo em foco' }}</span>
                 <h2>
                     @if ($scheduleMode === 'teacher' && $selectedTeacher)
-                        Agenda de {{ $selectedTeacher->nome }} com o veículo {{ strtoupper($selectedVehicle->placa) }}
+                        Agenda de {{ $selectedTeacher->nome }}
                     @else
                         Você está montando a agenda deste veículo
                     @endif
                 </h2>
-                <div class="vehicle-plate">{{ strtoupper($selectedVehicle->placa) }}</div>
+                <div class="vehicle-plate">{{ $scheduleMode === 'teacher' && $selectedTeacher ? $selectedTeacher->nome : strtoupper($selectedVehicle->placa) }}</div>
                 <p>
                     @if ($scheduleMode === 'teacher' && $selectedTeacher)
-                        Nesta grade, o instrutor e o veículo ficam reservados no horário selecionado. Horários já usados por este instrutor ou por este carro aparecem bloqueados.
+                        Nesta grade, cada horário mostra as aulas deste instrutor. Ao salvar uma aula nova, escolha apenas entre os veículos livres naquele mesmo horário.
                     @else
                         Todos os horários desta grade pertencem exclusivamente a este veículo. Qualquer aula marcada aqui reserva esta placa para o horário selecionado.
                     @endif
@@ -103,21 +105,23 @@
                 <div class="vehicle-hero-meta">
                     @if ($scheduleMode === 'teacher' && $selectedTeacher)
                         <span class="vehicle-hero-chip">{{ $selectedTeacher->nome }}</span>
+                        <span class="vehicle-hero-chip">{{ $vehicles->count() }} veículo(s) disponível(is)</span>
+                    @else
+                        <span class="vehicle-hero-chip">{{ \App\Models\Vehicle::categoryOptions()[$selectedVehicle->categoria] ?? $selectedVehicle->categoria }}</span>
                     @endif
-                    <span class="vehicle-hero-chip">{{ \App\Models\Vehicle::categoryOptions()[$selectedVehicle->categoria] ?? $selectedVehicle->categoria }}</span>
                     <span class="vehicle-hero-chip">Semana {{ $weekStart->format('d/m') }} a {{ $weekStart->copy()->addDays(5)->format('d/m/Y') }}</span>
                 </div>
             </div>
             <div class="vehicle-hero-side">
                 <div class="vehicle-focus-card">
                     <span class="eyebrow">Leitura rápida</span>
-                    <strong>{{ strtoupper($selectedVehicle->placa) }}</strong>
-                    <p>Use esta referência antes de salvar qualquer aula para evitar marcar no carro errado.</p>
+                    <strong>{{ $scheduleMode === 'teacher' && $selectedTeacher ? $selectedTeacher->nome : strtoupper($selectedVehicle->placa) }}</strong>
+                    <p>{{ $scheduleMode === 'teacher' ? 'A mesma hora nao pode ser ocupada por outro veiculo para este instrutor.' : 'Use esta referencia antes de salvar qualquer aula para evitar marcar no carro errado.' }}</p>
                 </div>
                 <div class="vehicle-focus-card">
                     <span class="eyebrow">{{ $scheduleMode === 'teacher' ? 'Instrutor' : 'Categoria' }}</span>
                     <strong>{{ $scheduleMode === 'teacher' && $selectedTeacher ? $selectedTeacher->nome : (\App\Models\Vehicle::categoryOptions()[$selectedVehicle->categoria] ?? $selectedVehicle->categoria) }}</strong>
-                    <p>{{ $scheduleMode === 'teacher' ? 'Somente horários livres para este instrutor e este veículo podem ser salvos.' : 'Somente professores e alunos compatíveis com esta categoria entram no fluxo principal.' }}</p>
+                    <p>{{ $scheduleMode === 'teacher' ? 'O veiculo escolhido dentro do horario tambem precisa estar livre.' : 'Somente professores e alunos compativeis com esta categoria entram no fluxo principal.' }}</p>
                 </div>
             </div>
         </div>
@@ -126,21 +130,23 @@
             <div class="teacher-focus-banner">
                 <span>Instrutor selecionado</span>
                 <strong>{{ $selectedTeacher->nome }}</strong>
-                <small>Veículo {{ strtoupper($selectedVehicle->placa) }} - categoria {{ \App\Models\Vehicle::categoryOptions()[$selectedVehicle->categoria] ?? $selectedVehicle->categoria }}</small>
+                <small>{{ $vehicleCategoryFilter ? 'Categoria '.$vehicleCategoryFilter : 'Todas as categorias do instrutor' }}</small>
             </div>
         @endif
 
         <div class="vehicle-summary">
             @if ($scheduleMode === 'teacher' && $selectedTeacher)
                 <span class="vehicle-chip">Instrutor {{ $selectedTeacher->nome }}</span>
+                <span class="vehicle-chip">{{ $vehicles->count() }} veículo(s)</span>
+            @else
+                <span class="vehicle-chip">Placa {{ strtoupper($selectedVehicle->placa) }}</span>
+                <span class="vehicle-chip">{{ \App\Models\Vehicle::categoryOptions()[$selectedVehicle->categoria] ?? $selectedVehicle->categoria }}</span>
             @endif
-            <span class="vehicle-chip">Placa {{ strtoupper($selectedVehicle->placa) }}</span>
-            <span class="vehicle-chip">{{ \App\Models\Vehicle::categoryOptions()[$selectedVehicle->categoria] ?? $selectedVehicle->categoria }}</span>
         </div>
 
         <div class="agenda-week-nav">
             <a class="btn-secondary" data-agenda-nav href="{{ route('appointments.index', array_merge($agendaRouteParams, ['week_start' => $weekStart->copy()->subWeek()->toDateString()])) }}">Semana anterior</a>
-            <span><strong>{{ strtoupper($selectedVehicle->placa) }}</strong> - {{ $weekStart->format('d/m') }} a {{ $weekStart->copy()->addDays(5)->format('d/m/Y') }}</span>
+            <span><strong>{{ $scheduleMode === 'teacher' && $selectedTeacher ? $selectedTeacher->nome : strtoupper($selectedVehicle->placa) }}</strong> - {{ $weekStart->format('d/m') }} a {{ $weekStart->copy()->addDays(5)->format('d/m/Y') }}</span>
             <a class="btn-secondary" data-agenda-nav href="{{ route('appointments.index', array_merge($agendaRouteParams, ['week_start' => $weekStart->copy()->addWeek()->toDateString()])) }}">Próxima semana</a>
         </div>
 
@@ -175,10 +181,12 @@
                                         'students' => $students,
                                         'busyTeacherIdsBySlot' => $busyTeacherIdsBySlot,
                                         'busyStudentIdsBySlot' => $busyStudentIdsBySlot,
+                                        'busyVehicleIdsBySlot' => $busyVehicleIdsBySlot,
                                         'vehicleCategoryFilter' => $vehicleCategoryFilter,
                                         'studentCategoryLabels' => $studentCategoryLabels,
                                         'scheduleMode' => $scheduleMode,
                                         'selectedTeacher' => $selectedTeacher,
+                                        'vehicles' => $vehicles,
                                     ])
                                 </td>
                             @endforeach
@@ -194,7 +202,7 @@
                 <p>Selecione se a visualização será por veículo ou por instrutor para liberar os próximos filtros.</p>
             @elseif ($scheduleMode === 'teacher' && ! $selectedTeacher)
                 <strong>Selecione um instrutor.</strong>
-                <p>Depois escolha o veículo para abrir a grade semanal deste instrutor.</p>
+                <p>Depois carregue a grade semanal para visualizar todas as aulas e veículos disponíveis deste instrutor.</p>
             @elseif (! $selectedVehicle)
                 <strong>Selecione um veículo.</strong>
                 <p>{{ $scheduleMode === 'teacher' ? 'O veículo será combinado com o instrutor escolhido antes de exibir a grade.' : 'A grade de horários só aparece depois que um veículo for selecionado.' }}</p>

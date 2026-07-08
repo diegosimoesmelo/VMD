@@ -45,6 +45,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/alunos/{student}/editar', [StudentController::class, 'edit'])->name('students.edit');
             Route::put('/alunos/{student}', [StudentController::class, 'update'])->name('students.update');
             Route::post('/alunos/{student}/avancar-status', [StudentController::class, 'advanceStatus'])->name('students.advance-status');
+            Route::get('/alunos/{student}/marcar-aulas', [AppointmentController::class, 'student'])->name('students.appointments.create');
+            Route::post('/alunos/{student}/marcar-aulas', [AppointmentController::class, 'storeStudentBatch'])->name('students.appointments.store');
             Route::post('/alunos/{student}/compras-aulas', [StudentController::class, 'storeLessonPurchase'])->name('students.lesson-purchases.store');
             Route::get('/alunos/{student}/recibo-cadastro', [ReceiptController::class, 'registration'])->name('students.receipts.registration.show');
             Route::get('/alunos/{student}/recibo-cadastro/pdf', [ReceiptController::class, 'registrationPdf'])->name('students.receipts.registration.download');

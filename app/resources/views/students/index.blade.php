@@ -767,6 +767,7 @@
                                 <td>
                                     <div class="action-stack">
                                         <a class="btn-secondary" href="{{ route('students.edit', $student) }}">Editar</a>
+                                        <a class="btn-secondary" href="{{ route('students.appointments.create', $student) }}">Marcar aulas</a>
                                         <button class="modal-trigger" type="button" data-modal-target="appointments-modal-{{ $student->id }}">
                                             Detalhes
                                         </button>

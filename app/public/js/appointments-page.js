@@ -135,6 +135,10 @@
 
         const slotForm = event.target.closest("form.slot-form");
         if (slotForm) {
+            if (slotForm.hasAttribute("data-full-submit")) {
+                return;
+            }
+
             event.preventDefault();
             submitSlotForm(slotForm).catch((error) => showMessage(error.message, "error"));
             return;
@@ -142,6 +146,10 @@
 
         const deleteForm = event.target.closest("form.slot-delete-form");
         if (deleteForm) {
+            if (deleteForm.hasAttribute("data-full-submit")) {
+                return;
+            }
+
             event.preventDefault();
             submitDeleteForm(deleteForm).catch((error) => showMessage(error.message, "error"));
         }
@@ -158,6 +166,32 @@
     });
 
     document.addEventListener("change", (event) => {
+        const vehicleSelect = event.target.closest(".slot-vehicle-select");
+        if (vehicleSelect) {
+            const form = vehicleSelect.closest("form");
+            const studentSelect = form ? form.querySelector(".slot-student-select") : null;
+            const selectedOption = vehicleSelect.selectedOptions[0];
+            const category = selectedOption ? selectedOption.dataset.category || "" : "";
+
+            if (studentSelect) {
+                Array.from(studentSelect.options).forEach((option) => {
+                    if (option.value === "") {
+                        option.hidden = false;
+                        return;
+                    }
+
+                    const categories = (option.dataset.categories || "").split(",").filter(Boolean);
+                    option.hidden = category !== "" && !categories.includes(category);
+                });
+
+                if (studentSelect.selectedOptions[0]?.hidden) {
+                    studentSelect.value = "";
+                }
+            }
+
+            return;
+        }
+
         const modeInput = event.target.closest('input[name="schedule_mode"]');
         if (!modeInput) {
             return;

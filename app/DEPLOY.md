@@ -2,13 +2,20 @@
 
 Este projeto roda em producao com Docker Compose, Caddy, Laravel e PostgreSQL.
 
-## O que preciso da VPS
+## Enderecos
 
-- IP publico da VPS Contabo.
-- Usuario SSH e forma de acesso: senha ou chave SSH.
-- Dominio que sera usado no sistema, se ja existir.
-- Acesso ao painel DNS do dominio, se ja existir.
-- Confirmacao se o banco comeca vazio ou se existe dados para importar.
+Neste projeto, a landing page fica na Vercel e o sistema administrativo fica na VPS:
+
+```text
+https://autoescolavmd.com.br      -> Landing page Next.js na Vercel
+https://app.autoescolavmd.com.br  -> Sistema VMD Laravel na VPS
+```
+
+Na landing page, o botao de area administrativa deve apontar para:
+
+```text
+https://app.autoescolavmd.com.br
+```
 
 ## Sem dominio
 
@@ -18,6 +25,7 @@ Para publicar primeiro pelo IP da VPS, use:
 APP_URL=http://161.97.120.221
 APP_SITE_ADDRESS=:80
 APP_DOMAIN=
+SESSION_SECURE_COOKIE=false
 ```
 
 Nesse modo o acesso fica:
@@ -28,29 +36,33 @@ http://161.97.120.221
 
 ## Com dominio
 
-Quando tiver um dominio, altere:
+Para o dominio `autoescolavmd.com.br`, use:
 
 ```env
-APP_URL=https://seudominio.com.br
-APP_SITE_ADDRESS=seudominio.com.br
-APP_DOMAIN=seudominio.com.br
+APP_URL=https://app.autoescolavmd.com.br
+APP_SITE_ADDRESS=app.autoescolavmd.com.br
+APP_DOMAIN=autoescolavmd.com.br
+SESSION_SECURE_COOKIE=true
 ```
 
 ## DNS
 
-No painel do dominio, crie:
+Como a landing esta na Vercel, o dominio principal deve seguir as instrucoes de DNS da Vercel. Em geral, a Vercel vai pedir registros para:
+
+```text
+autoescolavmd.com.br
+www.autoescolavmd.com.br
+```
+
+Para o sistema administrativo na VPS, crie tambem:
 
 ```text
 Tipo: A
-Nome: @
-Valor: IP_DA_VPS
-
-Tipo: CNAME
-Nome: www
-Valor: seudominio.com.br
+Nome: app
+Valor: 161.97.120.221
 ```
 
-Aguarde a propagacao antes de subir o HTTPS.
+Aguarde a propagacao antes de subir o HTTPS do sistema.
 
 ## Preparar a VPS
 
@@ -90,11 +102,12 @@ nano .env.production
 Preencha principalmente:
 
 ```env
-APP_URL=http://161.97.120.221
-APP_SITE_ADDRESS=:80
-APP_DOMAIN=
+APP_URL=https://app.autoescolavmd.com.br
+APP_SITE_ADDRESS=app.autoescolavmd.com.br
+APP_DOMAIN=autoescolavmd.com.br
 DB_PASSWORD=senha_forte
 POSTGRES_PASSWORD=senha_forte
+SESSION_SECURE_COOKIE=true
 PGADMIN_DEFAULT_EMAIL=admin@vmd.local
 PGADMIN_DEFAULT_PASSWORD=senha_forte_do_pgadmin
 MAIL_*

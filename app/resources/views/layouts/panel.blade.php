@@ -422,5 +422,16 @@
     </div>
 </div>
 <script src="{{ asset('js/global-error-handler.js') }}"></script>
+@if (session('receipt_url'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var receiptWindow = window.open(@json(session('receipt_url')), '_blank', 'noopener');
+
+            if (! receiptWindow) {
+                console.info('O navegador bloqueou a abertura automatica do recibo.');
+            }
+        });
+    </script>
+@endif
 </body>
 </html>

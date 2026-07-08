@@ -621,6 +621,11 @@
     @if (session('success'))
         <p class="notice notice-success">{{ session('success') }}</p>
     @endif
+    @if (session('receipt_url'))
+        <p class="notice notice-success">
+            Recibo aberto em nova aba. Se o navegador bloquear, <a href="{{ session('receipt_url') }}" target="_blank" rel="noopener">clique aqui para abrir o recibo</a>.
+        </p>
+    @endif
 
     @if ($errors->any())
         <div class="notice notice-error">
@@ -929,7 +934,7 @@
                                                             default => [],
                                                         };
                                                     @endphp
-                                                    <form class="purchase-form receipt-target-form" method="POST" action="{{ route('students.lesson-purchases.store', $student) }}" data-receipt-amount-field="amount_paid">
+                                                    <form class="purchase-form" method="POST" action="{{ route('students.lesson-purchases.store', $student) }}">
                                                         @csrf
                                                         <input type="hidden" name="tab" value="{{ $currentTab }}">
                                                         <input type="hidden" name="search" value="{{ $search }}">
@@ -1271,19 +1276,6 @@
                     tab.classList.add('active');
                     tab.setAttribute('aria-selected', 'true');
                     target.classList.add('active');
-                });
-            });
-
-            document.querySelectorAll('.receipt-target-form').forEach(function (form) {
-                form.addEventListener('submit', function () {
-                    var amountField = form.querySelector('[name="' + form.dataset.receiptAmountField + '"]');
-                    var amount = amountField ? parseFloat(amountField.value || '0') : 0;
-
-                    if (amount > 0) {
-                        form.setAttribute('target', '_blank');
-                    } else {
-                        form.removeAttribute('target');
-                    }
                 });
             });
 

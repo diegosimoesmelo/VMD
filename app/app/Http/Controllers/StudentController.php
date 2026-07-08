@@ -117,15 +117,15 @@ class StudentController extends Controller
         $student->save();
         $student->syncRemainingLessons();
 
+        $redirect = redirect()
+            ->route('students.index')
+            ->with('success', 'Aluno cadastrado com sucesso. Matricula: '.$student->matricula.'.');
+
         if (($student->valor_pago ?? 0) > 0) {
-            return redirect()
-                ->route('students.receipts.registration.show', $student)
-                ->with('success', 'Aluno cadastrado com sucesso. Recibo gerado automaticamente.');
+            $redirect->with('receipt_url', route('students.receipts.registration.show', $student));
         }
 
-        return redirect()
-            ->route('students.index')
-            ->with('success', 'Aluno cadastrado com sucesso. Matricula: '.$student->matricula);
+        return $redirect;
     }
 
     public function edit(Student $student): View
@@ -217,15 +217,15 @@ class StudentController extends Controller
             $student->syncRemainingLessons();
         });
 
-        if ($purchase && $purchase->amount_paid !== null) {
-            return redirect()
-                ->route('lesson-purchases.receipts.show', $purchase)
-                ->with('success', 'Compra registrada com sucesso. Recibo gerado automaticamente.');
-        }
-
-        return redirect()
+        $redirect = redirect()
             ->route('students.index', $request->only(['tab', 'search', 'teacher_id', 'timeline_status']))
             ->with('success', 'Compra de aulas registrada para '.$student->nome.'.');
+
+        if ($purchase && $purchase->amount_paid !== null) {
+            $redirect->with('receipt_url', route('lesson-purchases.receipts.show', $purchase));
+        }
+
+        return $redirect;
     }
 
     /**

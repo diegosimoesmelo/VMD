@@ -77,8 +77,6 @@
         id="studentForm"
         method="POST"
         action="{{ $formAction }}"
-        data-receipt-amount-field="valor_pago"
-        data-receipt-opens-tab="{{ empty($formMethod) || strtoupper($formMethod) === 'POST' ? 'true' : 'false' }}"
     >
         @csrf
         @if (! empty($formMethod) && strtoupper($formMethod) === 'PUT')
@@ -357,25 +355,4 @@
 </div>
 
 <script src="{{ asset('js/student-form.js') }}"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var form = document.getElementById('studentForm');
-
-        if (! form) {
-            return;
-        }
-
-        form.addEventListener('submit', function () {
-            var amountField = form.querySelector('[name="' + form.dataset.receiptAmountField + '"]');
-            var amount = amountField ? parseFloat(amountField.value || '0') : 0;
-
-            if (form.dataset.receiptOpensTab === 'true' && amount > 0) {
-                form.setAttribute('target', '_blank');
-            } else {
-                form.removeAttribute('target');
-            }
-        });
-    });
-</script>
-
 

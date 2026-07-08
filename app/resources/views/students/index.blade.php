@@ -1017,6 +1017,9 @@
                                                                 <span>
                                                                     {{ $student->created_at?->format('d/m/Y H:i') }}
                                                                     - R$ {{ number_format((float) $student->valor_pago, 2, ',', '.') }}
+                                                                    @if ($student->operator)
+                                                                        - {{ $student->operator->name ?: $student->operator->username }}
+                                                                    @endif
                                                                 </span>
                                                                 <div>
                                                                     <a class="modal-trigger" href="{{ route('students.receipts.registration.show', $student) }}" target="_blank" rel="noopener">Abrir recibo</a>

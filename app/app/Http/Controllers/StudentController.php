@@ -25,6 +25,7 @@ class StudentController extends Controller
         $baseQuery = Student::query()
             ->with([
                 'teacher',
+                'operator',
                 'appointments' => fn ($query) => $query
                     ->with(['teacher', 'vehicle'])
                     ->orderByDesc('starts_at'),
@@ -111,6 +112,7 @@ class StudentController extends Controller
     {
         $validated = $request->validate($this->rules());
         $validated = $this->normalizeStudentLessonQuantities($validated);
+        $validated['operator_user_id'] = $request->user()?->id;
 
         $student = Student::create($validated);
         $student->matricula = Student::gerarMatricula((int) $student->id);

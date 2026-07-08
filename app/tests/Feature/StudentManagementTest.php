@@ -37,6 +37,68 @@ class StudentManagementTest extends TestCase
         $response->assertSee('Avancar etapa');
     }
 
+    public function test_authenticated_user_is_saved_as_initial_registration_operator(): void
+    {
+        $user = User::factory()->create(['name' => 'Operador Cadastro']);
+
+        $response = $this
+            ->actingAs($user)
+            ->post(route('students.store'), [
+                'nome' => 'Aluno Venda Inicial',
+                'endereco' => 'Rua da Matricula',
+                'telefone' => '(81) 99999-0000',
+                'data_nascimento' => '2000-05-10',
+                'cpf' => '123.123.123-99',
+                'nome_mae' => 'Mae Venda',
+                'status' => Student::STATUS_THEORY_CLASS,
+                'servico_oferecido' => 'primeira_habilitacao',
+                'categoria_pretendida' => 'B',
+                'valor_pago' => 1200,
+                'payment_method' => 'pix',
+                'quantidade_aulas_b_contratadas' => 20,
+            ]);
+
+        $response->assertRedirect(route('students.index'));
+
+        $this->assertDatabaseHas('students', [
+            'cpf' => '123.123.123-99',
+            'operator_user_id' => $user->id,
+        ]);
+    }
+
+    public function test_authenticated_user_is_saved_as_lesson_purchase_operator(): void
+    {
+        $user = User::factory()->create(['name' => 'Operador Compra']);
+        $student = Student::query()->create([
+            'nome' => 'Aluno Compra',
+            'endereco' => 'Rua Compra',
+            'telefone' => '(81) 98888-0000',
+            'data_nascimento' => '2001-02-03',
+            'cpf' => '987.987.987-99',
+            'nome_mae' => 'Mae Compra',
+            'status' => Student::STATUS_PRACTICAL_CLASS,
+            'categoria_pretendida' => 'B',
+        ]);
+
+        $response = $this
+            ->actingAs($user)
+            ->post(route('students.lesson-purchases.store', $student), [
+                'lesson_category' => 'B',
+                'quantity' => 5,
+                'amount_paid' => 350,
+                'payment_method' => 'pix',
+            ]);
+
+        $response->assertRedirect(route('students.index'));
+
+        $this->assertDatabaseHas('student_lesson_purchases', [
+            'student_id' => $student->id,
+            'user_id' => $user->id,
+            'lesson_category' => 'B',
+            'quantity' => 5,
+        ]);
+    }
+
     public function test_authenticated_user_can_advance_student_status_from_list(): void
     {
         $user = User::factory()->create();

@@ -12,6 +12,8 @@ class ReceiptController extends Controller
 {
     public function registration(Student $student): View
     {
+        $student->loadMissing('operator');
+
         return view('receipts.show', [
             'receipt' => $this->registrationReceipt($student),
             'downloadRoute' => route('students.receipts.registration.download', $student),
@@ -21,6 +23,7 @@ class ReceiptController extends Controller
 
     public function registrationPdf(Student $student): Response
     {
+        $student->loadMissing('operator');
         $receipt = $this->registrationReceipt($student);
 
         return $this->pdfResponse($receipt, 'recibo-cadastro-'.$student->matricula.'.pdf');
@@ -60,7 +63,7 @@ class ReceiptController extends Controller
             'amount' => $student->valor_pago,
             'payment_method' => $this->paymentMethodLabel($student->payment_method),
             'notes' => $student->observacao,
-            'issued_by' => auth()->user()?->name ?: auth()->user()?->username,
+            'issued_by' => $student->operator?->name ?: $student->operator?->username,
             'items' => array_values(array_filter([
                 $student->servico_oferecido ? 'Serviço: '.$this->serviceLabel($student->servico_oferecido) : null,
                 $student->categoria_pretendida ? 'Categoria: '.$student->categoria_pretendida : null,

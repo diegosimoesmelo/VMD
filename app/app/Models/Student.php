@@ -52,6 +52,7 @@ class Student extends Model
         'nome_pai',
         'nome_mae',
         'teacher_id',
+        'operator_user_id',
         'status',
         'servico_oferecido',
         'categoria_pretendida',
@@ -76,6 +77,11 @@ class Student extends Model
     public function teacher(): BelongsTo
     {
         return $this->belongsTo(Teacher::class);
+    }
+
+    public function operator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'operator_user_id');
     }
 
     public function appointments(): HasMany

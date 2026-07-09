@@ -183,7 +183,7 @@
 
     <div class="surface-card section-card">
         <div class="student-schedule-toolbar">
-            <form method="GET" action="{{ route('students.appointments.create', $student) }}">
+            <form method="GET" action="{{ route('students.appointments.create', $student) }}" data-student-schedule-filter>
                 <div class="field-inline">
                     <label for="lesson_category">Categoria da aula</label>
                     <select id="lesson_category" name="lesson_category" required>
@@ -327,4 +327,33 @@
             </form>
         @endif
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var filterForm = document.querySelector('[data-student-schedule-filter]');
+
+            if (! filterForm) {
+                return;
+            }
+
+            filterForm.querySelectorAll('select[name="lesson_category"], select[name="vehicle"], select[name="teacher"], input[name="week_start"]').forEach(function (field) {
+                field.addEventListener('change', function () {
+                    if (field.name === 'lesson_category') {
+                        var vehicleField = filterForm.querySelector('select[name="vehicle"]');
+                        var teacherField = filterForm.querySelector('select[name="teacher"]');
+
+                        if (vehicleField) {
+                            vehicleField.value = '';
+                        }
+
+                        if (teacherField) {
+                            teacherField.value = '';
+                        }
+                    }
+
+                    filterForm.submit();
+                });
+            });
+        });
+    </script>
 @endsection

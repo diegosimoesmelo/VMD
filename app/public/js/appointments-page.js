@@ -192,13 +192,21 @@
             return;
         }
 
-        const modeInput = event.target.closest('input[name="schedule_mode"]');
-        if (!modeInput) {
+        const filterInput = event.target.closest('input[name="schedule_mode"], select[name="vehicle_category"]');
+        if (!filterInput) {
             return;
         }
 
-        const filterForm = modeInput.closest("form[data-agenda-filter-form]");
+        const filterForm = filterInput.closest("form[data-agenda-filter-form]");
         if (filterForm) {
+            if (filterInput.name === "vehicle_category") {
+                const vehicleField = filterForm.querySelector('select[name="vehicle"]');
+
+                if (vehicleField) {
+                    vehicleField.value = "";
+                }
+            }
+
             requestFilterForm(filterForm);
         }
     });

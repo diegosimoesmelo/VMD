@@ -21,7 +21,7 @@ class Student extends Model
      */
     public static function gerarMatricula(int $id): string
     {
-        return sprintf('%02d%d', (int) now()->format('y'), $id);
+        return (string) $id;
     }
 
     protected $fillable = [

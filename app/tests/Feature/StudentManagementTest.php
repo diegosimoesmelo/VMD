@@ -60,6 +60,9 @@ class StudentManagementTest extends TestCase
 
         $response->assertRedirect(route('students.index'));
 
+        $student = Student::query()->where('cpf', '123.123.123-99')->firstOrFail();
+
+        $this->assertSame((string) $student->id, $student->matricula);
         $this->assertDatabaseHas('students', [
             'cpf' => '123.123.123-99',
             'operator_user_id' => $user->id,

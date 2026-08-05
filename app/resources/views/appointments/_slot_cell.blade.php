@@ -83,9 +83,12 @@
     if ($appointment?->student && ! $availableStudents->contains(fn ($student) => $student->id === $appointment->student_id)) {
         $availableStudents = $availableStudents->push($appointment->student);
     }
+
+    $isTrainingStudentAppointment = $appointment?->type === \App\Models\Appointment::TYPE_LESSON
+        && (bool) $appointment?->student?->treinamento_para_habilitados;
 @endphp
 
-<div class="slot-card {{ $appointment?->type === \App\Models\Appointment::TYPE_LESSON ? 'busy' : '' }} {{ $appointment?->type === \App\Models\Appointment::TYPE_UNAVAILABLE ? 'unavailable' : '' }} {{ $slotLocked ? 'locked' : '' }}">
+<div class="slot-card {{ $appointment?->type === \App\Models\Appointment::TYPE_LESSON ? 'busy' : '' }} {{ $isTrainingStudentAppointment ? 'training-student' : '' }} {{ $appointment?->type === \App\Models\Appointment::TYPE_UNAVAILABLE ? 'unavailable' : '' }} {{ $slotLocked ? 'locked' : '' }}">
     @if ($slotLocked)
         <span class="slot-status locked">Horario ocupado</span>
         <div class="slot-meta">

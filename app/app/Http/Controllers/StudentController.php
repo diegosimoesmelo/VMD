@@ -7,6 +7,7 @@ use App\Models\Teacher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -18,6 +19,7 @@ class StudentController extends Controller
         $tab = $request->string('tab')->toString() ?: 'active';
         $teacherFilter = $request->string('teacher_id')->toString();
         $timelineStatusFilter = $request->string('timeline_status')->toString();
+        $hasTrainingColumn = $this->studentsHaveTrainingColumn();
         $teachers = Teacher::query()
             ->orderBy('nome')
             ->get();
@@ -70,6 +72,9 @@ class StudentController extends Controller
         $tabCounts = [
             'active' => (clone $baseQuery)->where('status', '!=', Student::STATUS_FINISHED)->count(),
             'without_teacher' => (clone $baseQuery)->whereNull('teacher_id')->count(),
+            'training' => $hasTrainingColumn
+                ? (clone $baseQuery)->where('treinamento_para_habilitados', true)->count()
+                : 0,
             'finished' => (clone $baseQuery)->where('status', Student::STATUS_FINISHED)->count(),
         ];
 
@@ -77,6 +82,10 @@ class StudentController extends Controller
 
         if ($tab === 'without_teacher') {
             $studentsQuery->whereNull('teacher_id');
+        } elseif ($tab === 'training' && $hasTrainingColumn) {
+            $studentsQuery->where('treinamento_para_habilitados', true);
+        } elseif ($tab === 'training') {
+            $studentsQuery->whereRaw('1 = 0');
         } elseif ($tab === 'finished') {
             $studentsQuery->where('status', Student::STATUS_FINISHED);
         } else {
@@ -112,6 +121,13 @@ class StudentController extends Controller
     {
         $validated = $request->validate($this->rules());
         $validated = $this->normalizeStudentLessonQuantities($validated);
+
+        if ($this->studentsHaveTrainingColumn()) {
+            $validated['treinamento_para_habilitados'] = $request->boolean('treinamento_para_habilitados');
+        } else {
+            unset($validated['treinamento_para_habilitados']);
+        }
+
         $validated['operator_user_id'] = $request->user()?->id;
 
         $student = Student::create($validated);
@@ -143,6 +159,12 @@ class StudentController extends Controller
     {
         $validated = $request->validate($this->rules($student));
         $validated = $this->normalizeStudentLessonQuantities($validated);
+
+        if ($this->studentsHaveTrainingColumn()) {
+            $validated['treinamento_para_habilitados'] = $request->boolean('treinamento_para_habilitados');
+        } else {
+            unset($validated['treinamento_para_habilitados']);
+        }
 
         $student->update($validated);
         $student->syncRemainingLessons();
@@ -270,6 +292,7 @@ class StudentController extends Controller
             'teacher_id' => ['nullable', 'integer', 'exists:teachers,id'],
             'status' => ['required', Rule::in(array_keys(Student::statusOptions()))],
             'servico_oferecido' => ['nullable', 'in:primeira_habilitacao,adicao_categoria,aula_habilitado,prova_atualizacao,prova_reciclagem'],
+            'treinamento_para_habilitados' => ['nullable', 'boolean'],
             'categoria_pretendida' => ['nullable', 'in:A,B,AB'],
             'valor_pago' => ['nullable', 'numeric', 'min:0'],
             'payment_method' => ['nullable', 'required_with:valor_pago', Rule::in(array_keys(config('receipt.payment_methods')))],
@@ -330,5 +353,16 @@ class StudentController extends Controller
             'AB' => ['A', 'B'],
             default => [],
         };
+    }
+
+    private function studentsHaveTrainingColumn(): bool
+    {
+        static $hasColumn = null;
+
+        if ($hasColumn === null) {
+            $hasColumn = Schema::hasColumn('students', 'treinamento_para_habilitados');
+        }
+
+        return $hasColumn;
     }
 }

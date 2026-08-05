@@ -13,7 +13,7 @@ class StudentProfilePdf
 
     private static function page(Student $student): string
     {
-        $school = config('receipt.school');
+        $school = SchoolProfile::forStudent($student);
         $content = self::text((string) ($school['name'] ?? 'Autoescola'), 40, 800, 15, true)
             .self::text((string) ($school['address'] ?? ''), 40, 783, 9)
             .self::text('FICHA CADASTRAL DO ALUNO', 40, 756, 14, true)

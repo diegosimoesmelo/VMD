@@ -240,6 +240,14 @@
             background: rgba(217, 119, 6, 0.08);
             border-color: rgba(217, 119, 6, 0.20);
         }
+        .slot-card.training-student {
+            background: rgba(34, 197, 94, 0.16);
+            border-color: rgba(22, 163, 74, 0.34);
+        }
+        .slot-card.training-student .slot-status.lesson {
+            background: rgba(22, 163, 74, 0.16);
+            color: #166534;
+        }
         .slot-card.unavailable {
             background: rgba(var(--color-secondary-rgb), 0.08);
             border-color: rgba(var(--color-secondary-rgb), 0.14);

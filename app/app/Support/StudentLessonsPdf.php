@@ -35,7 +35,7 @@ class StudentLessonsPdf
      */
     private static function page(Student $student, Collection $appointments, string $category, int $page, int $pageCount): string
     {
-        $school = config('receipt.school');
+        $school = SchoolProfile::forStudent($student);
         $content = self::text((string) ($school['name'] ?? 'Autoescola'), 40, 555, 15, true)
             .self::text((string) ($school['address'] ?? ''), 40, 538, 9)
             .self::text('RELATÓRIO DE AULAS AGENDADAS', 324, 555, 14, true)

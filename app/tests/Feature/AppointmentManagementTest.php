@@ -515,4 +515,53 @@ class AppointmentManagementTest extends TestCase
         $response->assertDontSee('Grade semanal de professores');
         $response->assertDontSee('Resumo por professor');
     }
+
+    public function test_vehicle_schedule_highlights_training_student_appointments(): void
+    {
+        $user = User::factory()->create();
+        $teacher = Teacher::query()->create([
+            'nome' => 'Professor Treinamento',
+            'cpf' => '147.258.369-00',
+            'telefone' => '(81) 96666-1470',
+            'categorias_ensino' => ['B'],
+            'turnos_disponiveis' => ['manha'],
+        ]);
+        $vehicle = Vehicle::query()->create([
+            'placa' => 'TRN1B23',
+            'categoria' => 'B',
+        ]);
+        $student = Student::query()->create([
+            'nome' => 'Aluno Verde',
+            'endereco' => 'Rua Verde',
+            'telefone' => '(81) 95555-3333',
+            'data_nascimento' => '1995-03-15',
+            'cpf' => '789.789.789-99',
+            'nome_mae' => 'Mae Verde',
+            'status' => Student::STATUS_PRACTICAL_CLASS,
+            'categoria_pretendida' => 'B',
+            'treinamento_para_habilitados' => true,
+        ]);
+
+        Appointment::query()->create([
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+            'vehicle_id' => $vehicle->id,
+            'type' => Appointment::TYPE_LESSON,
+            'lesson_category' => 'B',
+            'starts_at' => '2026-03-23 07:00:00',
+            'ends_at' => '2026-03-23 07:50:00',
+        ]);
+
+        $response = $this
+            ->actingAs($user)
+            ->get(route('appointments.index', [
+                'schedule_mode' => 'vehicle',
+                'vehicle' => $vehicle->id,
+                'week_start' => '2026-03-23',
+            ]));
+
+        $response->assertOk();
+        $response->assertSee('Aluno Verde');
+        $response->assertSee('training-student');
+    }
 }

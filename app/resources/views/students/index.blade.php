@@ -11,6 +11,7 @@
         $hasActiveFilters = $search !== '' || $teacherFilter !== '' || $timelineStatusFilter !== '';
         $activeCount = $tabCounts['active'] ?? 0;
         $withoutTeacherCount = $tabCounts['without_teacher'] ?? 0;
+        $trainingCount = $tabCounts['training'] ?? 0;
         $finishedCount = $tabCounts['finished'] ?? 0;
         $serviceLabels = [
             'primeira_habilitacao' => 'Primeira habilitação',
@@ -101,6 +102,7 @@
             font-size: 13px;
         }
         .teacher-badge,
+        .training-badge,
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -120,6 +122,11 @@
         .status-badge {
             background: rgba(217, 119, 6, 0.12);
             color: #9a6700;
+        }
+        .training-badge {
+            margin-top: 8px;
+            background: rgba(34, 197, 94, 0.12);
+            color: #166534;
         }
         .status-summary {
             display: grid;
@@ -651,6 +658,13 @@
             <span class="student-tab-count">{{ $currentTab === 'without_teacher' ? $students->count() : $withoutTeacherCount }}</span>
         </a>
         <a
+            class="student-tab {{ $currentTab === 'training' ? 'active' : '' }}"
+            href="{{ route('students.index', array_filter(['tab' => 'training', 'search' => $search, 'teacher_id' => $teacherFilter, 'timeline_status' => $timelineStatusFilter], fn ($value) => $value !== '')) }}"
+        >
+            Treinamento para Habilitados
+            <span class="student-tab-count">{{ $currentTab === 'training' ? $students->count() : $trainingCount }}</span>
+        </a>
+        <a
             class="student-tab {{ $currentTab === 'finished' ? 'active' : '' }}"
             href="{{ route('students.index', array_filter(['tab' => 'finished', 'search' => $search, 'teacher_id' => $teacherFilter, 'timeline_status' => $timelineStatusFilter], fn ($value) => $value !== '')) }}"
         >
@@ -740,6 +754,9 @@
                                 <td>
                                     <span class="record-title">{{ $student->nome }}</span>
                                     <span class="record-subtitle">{{ $student->email ?: 'Sem email cadastrado' }}</span>
+                                    @if ($student->treinamento_para_habilitados)
+                                        <span class="training-badge">Treinamento para Habilitados</span>
+                                    @endif
                                 </td>
                                 <td>
                                     @if ($student->teacher)
@@ -1295,4 +1312,3 @@
         });
     </script>
 @endsection
-

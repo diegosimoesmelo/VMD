@@ -44,6 +44,24 @@
         min-height: 120px;
         resize: vertical;
     }
+    .checkbox-field {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 48px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(34, 197, 94, 0.08);
+        border: 1px solid rgba(34, 197, 94, 0.18);
+        color: var(--color-secondary);
+        font-weight: 700;
+    }
+    .checkbox-field input {
+        width: 18px;
+        height: 18px;
+        margin: 0;
+        accent-color: #16a34a;
+    }
 </style>
 
 <div class="form-shell">
@@ -290,6 +308,19 @@
                             <option value="prova_atualizacao" @selected($v('servico_oferecido') === 'prova_atualizacao')>Prova de Atualização</option>
                             <option value="prova_reciclagem" @selected($v('servico_oferecido') === 'prova_reciclagem')>Prova de Reciclagem</option>
                         </select>
+                    </div>
+                    <div class="field col-4">
+                        <label>&nbsp;</label>
+                        <label class="checkbox-field" for="treinamento_para_habilitados">
+                            <input
+                                id="treinamento_para_habilitados"
+                                name="treinamento_para_habilitados"
+                                type="checkbox"
+                                value="1"
+                                @checked((bool) $v('treinamento_para_habilitados'))
+                            >
+                            Treinamento para Habilitados
+                        </label>
                     </div>
                     <div class="field col-4">
                         <label for="categoria_pretendida">Categoria</label>

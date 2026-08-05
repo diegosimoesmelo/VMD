@@ -77,6 +77,18 @@
                 color: var(--color-secondary);
                 margin-bottom: 4px;
             }
+            .training-label {
+                display: inline-flex;
+                align-items: center;
+                padding: 3px 7px;
+                margin-left: 6px;
+                border-radius: 999px;
+                background: rgba(34, 197, 94, 0.14);
+                color: #166534;
+                font-size: 11px;
+                font-weight: 800;
+                vertical-align: middle;
+            }
             .teacher-empty {
                 color: var(--color-muted-text);
                 padding: 14px;
@@ -126,7 +138,12 @@
                     <h2>Próximo horário</h2>
                     @if ($summary['next'])
                         <p><strong>{{ $summary['next']->starts_at->format('d/m/Y H:i') }}</strong></p>
-                        <p>Aluno: {{ $summary['next']->student?->nome ?: 'Não informado' }}</p>
+                        <p>
+                            Aluno: {{ $summary['next']->student?->nome ?: 'Não informado' }}
+                            @if ($summary['next']->student?->treinamento_para_habilitados)
+                                <span class="training-label">Treinamento</span>
+                            @endif
+                        </p>
                         <p>Veículo: {{ $summary['next']->vehicle ? strtoupper($summary['next']->vehicle->placa) : '-' }}</p>
                     @else
                         <p>Nenhuma aula futura nesta semana.</p>
@@ -149,7 +166,12 @@
                                     @foreach ($dayAppointments as $appointment)
                                         <div class="teacher-appointment-item">
                                             <strong>{{ $appointment->starts_at->format('H:i') }} até {{ $appointment->ends_at?->format('H:i') }}</strong>
-                                            <div>Aluno: {{ $appointment->student?->nome ?: 'Não informado' }}</div>
+                                            <div>
+                                                Aluno: {{ $appointment->student?->nome ?: 'Não informado' }}
+                                                @if ($appointment->student?->treinamento_para_habilitados)
+                                                    <span class="training-label">Treinamento</span>
+                                                @endif
+                                            </div>
                                             <div>Veículo: {{ $appointment->vehicle ? strtoupper($appointment->vehicle->placa) : '-' }}</div>
                                             @if ($appointment->lesson_category)
                                                 <div>Categoria: {{ $appointment->lesson_category }}</div>
@@ -265,6 +287,24 @@
                 color: var(--color-secondary);
                 margin-bottom: 3px;
             }
+            .mini-student-name {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+            .training-label {
+                display: inline-flex;
+                align-items: center;
+                padding: 3px 7px;
+                border-radius: 999px;
+                background: rgba(34, 197, 94, 0.14);
+                color: #166534;
+                font-size: 11px;
+                font-weight: 800;
+                line-height: 1.2;
+                white-space: nowrap;
+            }
             .mini-empty {
                 color: var(--color-muted-text);
             }
@@ -372,7 +412,12 @@
                                                     <td>
                                                         <div class="mini-cell {{ $appointment ? 'busy' : '' }}">
                                                             @if ($appointment)
-                                                                <strong>{{ $appointment->student?->nome ?: 'Indisponível' }}</strong>
+                                                                <strong class="mini-student-name">
+                                                                    <span>{{ $appointment->student?->nome ?: 'Indisponível' }}</span>
+                                                                    @if ($appointment->student?->treinamento_para_habilitados)
+                                                                        <span class="training-label">Treinamento</span>
+                                                                    @endif
+                                                                </strong>
                                                                 @if ($appointment->vehicle)
                                                                     <div>{{ strtoupper($appointment->vehicle->placa) }}</div>
                                                                 @endif

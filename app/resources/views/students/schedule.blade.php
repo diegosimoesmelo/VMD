@@ -88,6 +88,11 @@
             background: rgba(217, 119, 6, 0.08);
             border-color: rgba(217, 119, 6, 0.18);
         }
+        .schedule-slot.existing.training-student,
+        .schedule-slot.available.training-student {
+            background: rgba(34, 197, 94, 0.16);
+            border-color: rgba(22, 163, 74, 0.34);
+        }
         .slot-pick {
             display: flex;
             align-items: center;
@@ -298,7 +303,7 @@
                                             }
                                         @endphp
                                         <td>
-                                            <div class="schedule-slot {{ $lockedReason ? ($studentAppointment ? 'existing' : 'locked') : 'available' }}">
+                                            <div class="schedule-slot {{ $lockedReason ? ($studentAppointment ? 'existing' : 'locked') : 'available' }} {{ $student->treinamento_para_habilitados && ($studentAppointment || ! $lockedReason) ? 'training-student' : '' }}">
                                                 @if ($lockedReason)
                                                     <strong>Indisponivel</strong>
                                                     <span class="slot-reason">{{ $lockedReason }}</span>

@@ -69,6 +69,50 @@ class StudentManagementTest extends TestCase
         ]);
     }
 
+    public function test_authenticated_user_can_mark_and_filter_training_students(): void
+    {
+        $user = User::factory()->create();
+        Student::query()->create([
+            'nome' => 'Aluno Regular',
+            'endereco' => 'Rua Regular',
+            'telefone' => '(81) 98888-1111',
+            'data_nascimento' => '2000-01-01',
+            'cpf' => '111.111.111-99',
+            'nome_mae' => 'Mae Regular',
+            'status' => Student::STATUS_PRACTICAL_CLASS,
+        ]);
+
+        $response = $this
+            ->actingAs($user)
+            ->post(route('students.store'), [
+                'nome' => 'Aluno Treinamento',
+                'endereco' => 'Rua Treinamento',
+                'telefone' => '(81) 97777-2222',
+                'data_nascimento' => '1998-04-12',
+                'cpf' => '222.222.222-99',
+                'nome_mae' => 'Mae Treinamento',
+                'status' => Student::STATUS_PRACTICAL_CLASS,
+                'servico_oferecido' => 'aula_habilitado',
+                'categoria_pretendida' => 'B',
+                'treinamento_para_habilitados' => '1',
+            ]);
+
+        $response->assertRedirect(route('students.index'));
+        $this->assertDatabaseHas('students', [
+            'cpf' => '222.222.222-99',
+            'treinamento_para_habilitados' => true,
+        ]);
+
+        $response = $this
+            ->actingAs($user)
+            ->get(route('students.index', ['tab' => 'training']));
+
+        $response->assertOk();
+        $response->assertSee('Aluno Treinamento');
+        $response->assertSee('Treinamento para Habilitados');
+        $response->assertDontSee('Aluno Regular');
+    }
+
     public function test_authenticated_user_is_saved_as_lesson_purchase_operator(): void
     {
         $user = User::factory()->create(['name' => 'Operador Compra']);

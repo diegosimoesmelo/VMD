@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Student;
 use App\Models\StudentLessonPurchase;
 use App\Support\ReceiptPdf;
+use App\Support\SchoolProfile;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
 
@@ -70,7 +71,7 @@ class ReceiptController extends Controller
                 $student->quantidade_aulas_a_contratadas !== null ? 'Aulas A contratadas: '.$student->quantidade_aulas_a_contratadas : null,
                 $student->quantidade_aulas_b_contratadas !== null ? 'Aulas B contratadas: '.$student->quantidade_aulas_b_contratadas : null,
             ])),
-            'school' => config('receipt.school'),
+            'school' => SchoolProfile::forStudent($student),
         ];
     }
 
@@ -94,7 +95,7 @@ class ReceiptController extends Controller
                 'Categoria: '.$purchase->lesson_category,
                 'Quantidade: '.$purchase->quantity.' aula'.($purchase->quantity === 1 ? '' : 's'),
             ],
-            'school' => config('receipt.school'),
+            'school' => SchoolProfile::forStudent($purchase->student),
         ];
     }
 

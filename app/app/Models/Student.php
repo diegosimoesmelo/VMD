@@ -55,6 +55,7 @@ class Student extends Model
         'operator_user_id',
         'status',
         'servico_oferecido',
+        'treinamento_para_habilitados',
         'categoria_pretendida',
         'valor_pago',
         'payment_method',
@@ -65,6 +66,7 @@ class Student extends Model
 
     protected $casts = [
         'data_nascimento' => 'date',
+        'treinamento_para_habilitados' => 'boolean',
         'valor_pago' => 'decimal:2',
         'quantidade_aulas_contratadas' => 'integer',
         'quantidade_aulas_restantes' => 'integer',

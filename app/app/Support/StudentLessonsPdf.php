@@ -102,6 +102,7 @@ class StudentLessonsPdf
     private static function categoryTotals(Collection $appointments): array
     {
         return $appointments
+            ->toBase()
             ->groupBy('lesson_category')
             ->only(['A', 'B'])
             ->map(fn (Collection $categoryAppointments) => $categoryAppointments->count())

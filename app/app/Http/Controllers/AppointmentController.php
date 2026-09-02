@@ -196,7 +196,7 @@ class AppointmentController extends Controller
             'selectedTeacher' => $selectedTeacher,
             'weekStart' => $weekStart,
             'weekDays' => $weekDays,
-            'timeSlots' => $this->timeSlots(),
+            'timeSlots' => $this->timeSlotsForStudent($student),
             'slotAppointmentsBySlot' => $slotAppointmentsBySlot,
             'weekDayLabels' => [
                 1 => 'Segunda-feira',
@@ -242,10 +242,10 @@ class AppointmentController extends Controller
         DB::transaction(function () use ($uniqueSlots, $student, $teacher, $vehicle) {
             foreach ($uniqueSlots as $slotValue) {
                 [$slotDate, $slotTime] = explode('|', $slotValue, 2);
-                $startsAt = $this->resolveSlotDateTime($slotDate, $slotTime);
+                $startsAt = $this->resolveSlotDateTime($slotDate, $slotTime, $this->timeSlotsForStudent($student));
                 $endsAt = $startsAt->copy()->addMinutes(50);
 
-                abort_if(! $teacher->supportsTimeSlot($slotTime), 422, 'Um dos horarios selecionados esta fora do turno do professor.');
+                abort_if(! $this->teacherSupportsStudentSlot($teacher, $student, $slotTime), 422, 'Um dos horarios selecionados esta fora do turno do professor.');
                 abort_if(
                     Appointment::query()
                         ->where('vehicle_id', $vehicle->id)
@@ -368,6 +368,34 @@ class AppointmentController extends Controller
         ]);
     }
 
+    /**
+     * @return Collection<int, string>
+     */
+    private function extendedTrainingTimeSlots(): Collection
+    {
+        return collect(range(0, 17))
+            ->map(fn (int $offset) => Carbon::createFromTime(7, 0)->addMinutes($offset * 50)->format('H:i'));
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    private function timeSlotsForStudent(Student $student): Collection
+    {
+        return $student->treinamento_para_habilitados
+            ? $this->extendedTrainingTimeSlots()
+            : $this->timeSlots();
+    }
+
+    private function teacherSupportsStudentSlot(Teacher $teacher, Student $student, string $time): bool
+    {
+        if ($student->treinamento_para_habilitados) {
+            return $this->extendedTrainingTimeSlots()->contains($time);
+        }
+
+        return $teacher->supportsTimeSlot($time);
+    }
+
     private function resolveWeekStart(Request $request): Carbon
     {
         $weekStart = $request->filled('week_start')
@@ -407,11 +435,12 @@ class AppointmentController extends Controller
         return null;
     }
 
-    private function resolveSlotDateTime(string $date, string $time): Carbon
+    private function resolveSlotDateTime(string $date, string $time, ?Collection $allowedTimeSlots = null): Carbon
     {
         $startsAt = Carbon::createFromFormat('Y-m-d H:i', $date.' '.$time);
+        $allowedTimeSlots ??= $this->timeSlots();
 
-        abort_unless($startsAt && $this->timeSlots()->contains($time), 422);
+        abort_unless($startsAt && $allowedTimeSlots->contains($time), 422);
         abort_unless($startsAt->dayOfWeekIso >= 1 && $startsAt->dayOfWeekIso <= 6, 422);
 
         return $startsAt;

@@ -564,4 +564,103 @@ class AppointmentManagementTest extends TestCase
         $response->assertSee('Aluno Verde');
         $response->assertSee('training-student');
     }
+
+    public function test_training_student_schedule_shows_extended_time_slots(): void
+    {
+        $user = User::factory()->create();
+        $teacher = Teacher::query()->create([
+            'nome' => 'Professor Manha Treinamento',
+            'cpf' => '987.654.321-00',
+            'telefone' => '(81) 97777-2121',
+            'categorias_ensino' => ['B'],
+            'turnos_disponiveis' => ['manha'],
+            'status_agendamento' => Teacher::STATUS_AVAILABLE,
+        ]);
+        $vehicle = Vehicle::query()->create([
+            'placa' => 'TRN2B23',
+            'categoria' => 'B',
+        ]);
+        $student = Student::query()->create([
+            'nome' => 'Aluno Horario Extendido',
+            'endereco' => 'Rua Noite',
+            'telefone' => '(81) 94444-2121',
+            'data_nascimento' => '1990-01-10',
+            'cpf' => '123.123.123-44',
+            'nome_mae' => 'Mae Noite',
+            'status' => Student::STATUS_PRACTICAL_CLASS,
+            'categoria_pretendida' => 'B',
+            'quantidade_aulas_b_contratadas' => 5,
+            'quantidade_aulas_b_restantes' => 5,
+            'treinamento_para_habilitados' => true,
+        ]);
+
+        $response = $this
+            ->actingAs($user)
+            ->get(route('students.appointments.create', [
+                'student' => $student,
+                'lesson_category' => 'B',
+                'vehicle' => $vehicle->id,
+                'teacher' => $teacher->id,
+                'week_start' => '2026-03-23',
+            ]));
+
+        $response->assertOk();
+        $response->assertSee('SEG-21:10');
+        $response->assertDontSee('Fora do turno.');
+    }
+
+    public function test_training_student_can_book_extended_slot_outside_teacher_shift(): void
+    {
+        $user = User::factory()->create();
+        $teacher = Teacher::query()->create([
+            'nome' => 'Professor Manha Apenas',
+            'cpf' => '987.654.321-11',
+            'telefone' => '(81) 97777-3131',
+            'categorias_ensino' => ['B'],
+            'turnos_disponiveis' => ['manha'],
+            'status_agendamento' => Teacher::STATUS_AVAILABLE,
+        ]);
+        $vehicle = Vehicle::query()->create([
+            'placa' => 'TRN3B23',
+            'categoria' => 'B',
+        ]);
+        $student = Student::query()->create([
+            'nome' => 'Aluno Aula Noturna',
+            'endereco' => 'Rua Tarde',
+            'telefone' => '(81) 94444-3131',
+            'data_nascimento' => '1991-02-11',
+            'cpf' => '123.123.123-55',
+            'nome_mae' => 'Mae Tarde',
+            'status' => Student::STATUS_PRACTICAL_CLASS,
+            'categoria_pretendida' => 'B',
+            'quantidade_aulas_b_contratadas' => 5,
+            'quantidade_aulas_b_restantes' => 5,
+            'treinamento_para_habilitados' => true,
+        ]);
+
+        $response = $this
+            ->actingAs($user)
+            ->post(route('students.appointments.store', $student), [
+                'lesson_category' => 'B',
+                'vehicle_id' => $vehicle->id,
+                'teacher_id' => $teacher->id,
+                'week_start' => '2026-03-23',
+                'slots' => ['2026-03-23|21:10'],
+            ]);
+
+        $response->assertRedirect(route('students.appointments.create', [
+            'student' => $student,
+            'lesson_category' => 'B',
+            'vehicle' => $vehicle->id,
+            'teacher' => $teacher->id,
+            'week_start' => '2026-03-23',
+        ]));
+        $this->assertDatabaseHas('appointments', [
+            'student_id' => $student->id,
+            'teacher_id' => $teacher->id,
+            'vehicle_id' => $vehicle->id,
+            'starts_at' => '2026-03-23 21:10:00',
+            'ends_at' => '2026-03-23 22:00:00',
+        ]);
+    }
 }

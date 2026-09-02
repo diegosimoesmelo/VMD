@@ -50,13 +50,13 @@
         }
         .student-schedule-grid {
             width: 100%;
-            min-width: 1080px;
+            min-width: 820px;
             border-collapse: separate;
             border-spacing: 0;
         }
         .student-schedule-grid th,
         .student-schedule-grid td {
-            padding: 12px;
+            padding: 6px;
             border-bottom: 1px solid rgba(var(--color-secondary-rgb), 0.08);
             border-right: 1px solid rgba(var(--color-secondary-rgb), 0.05);
             vertical-align: top;
@@ -68,13 +68,38 @@
             font-weight: 700;
         }
         .schedule-slot {
-            min-height: 116px;
+            position: relative;
+            min-height: 56px;
             display: grid;
-            gap: 8px;
-            padding: 12px;
-            border-radius: 16px;
+            align-content: center;
+            gap: 4px;
+            padding: 7px 8px;
+            border-radius: 8px;
             background: rgba(255, 255, 255, 0.94);
             border: 1px solid rgba(var(--color-secondary-rgb), 0.10);
+            font-size: 12px;
+            overflow: hidden;
+        }
+        .schedule-slot::before {
+            content: attr(data-slot-label);
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(var(--color-secondary-rgb), 0.13);
+            font-size: 13px;
+            font-weight: 900;
+            line-height: 1;
+            pointer-events: none;
+            text-transform: uppercase;
+            z-index: 0;
+        }
+        .schedule-slot > * {
+            position: relative;
+            z-index: 1;
         }
         .schedule-slot.available {
             border-color: rgba(34, 197, 94, 0.26);
@@ -96,25 +121,27 @@
         .slot-pick {
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            gap: 6px;
             color: var(--color-secondary);
             font-weight: 800;
         }
         .slot-pick input {
-            width: 18px;
-            height: 18px;
+            width: 14px;
+            height: 14px;
             accent-color: var(--color-primary);
         }
         .slot-reason {
             color: var(--color-muted-text);
-            font-size: 13px;
-            line-height: 1.45;
+            font-size: 11px;
+            line-height: 1.25;
         }
         .agenda-time {
-            width: 120px;
+            width: 78px;
             white-space: nowrap;
             color: var(--color-secondary);
             font-weight: 800;
+            font-size: 12px;
         }
         .agenda-week-nav {
             display: flex;
@@ -291,19 +318,21 @@
                                             $teacherAppointment = $slotAppointments->first(fn ($appointment) => (int) $appointment->teacher_id === (int) $selectedTeacher->id);
                                             $vehicleAppointment = $slotAppointments->first(fn ($appointment) => (int) $appointment->vehicle_id === (int) $selectedVehicle->id);
                                             $lockedReason = null;
+                                            $slotLabel = strtoupper(mb_substr($weekDayLabels[$day->dayOfWeekIso] ?? $day->isoFormat('ddd'), 0, 3)).'-'.$slot;
+                                            $teacherSupportsSlot = $student->treinamento_para_habilitados || $selectedTeacher->supportsTimeSlot($slot);
 
-                                            if (! $selectedTeacher->supportsTimeSlot($slot)) {
-                                                $lockedReason = 'Fora do turno do professor.';
+                                            if (! $teacherSupportsSlot) {
+                                                $lockedReason = 'Fora do turno.';
                                             } elseif ($studentAppointment) {
-                                                $lockedReason = 'Aluno ja possui aula neste horario.';
+                                                $lockedReason = 'Ja marcado.';
                                             } elseif ($teacherAppointment) {
-                                                $lockedReason = 'Professor ocupado com '.($teacherAppointment->student?->nome ?: 'outro compromisso').'.';
+                                                $lockedReason = 'Professor ocupado.';
                                             } elseif ($vehicleAppointment) {
-                                                $lockedReason = 'Veiculo ocupado com '.($vehicleAppointment->student?->nome ?: 'outro compromisso').'.';
+                                                $lockedReason = 'Veiculo ocupado.';
                                             }
                                         @endphp
                                         <td>
-                                            <div class="schedule-slot {{ $lockedReason ? ($studentAppointment ? 'existing' : 'locked') : 'available' }} {{ $student->treinamento_para_habilitados && ($studentAppointment || ! $lockedReason) ? 'training-student' : '' }}">
+                                            <div class="schedule-slot {{ $lockedReason ? ($studentAppointment ? 'existing' : 'locked') : 'available' }} {{ $student->treinamento_para_habilitados && ($studentAppointment || ! $lockedReason) ? 'training-student' : '' }}" data-slot-label="{{ $slotLabel }}">
                                                 @if ($lockedReason)
                                                     <strong>Indisponivel</strong>
                                                     <span class="slot-reason">{{ $lockedReason }}</span>
@@ -315,7 +344,6 @@
                                                         <input type="checkbox" name="slots[]" value="{{ $day->toDateString() }}|{{ $slot }}">
                                                         Selecionar
                                                     </label>
-                                                    <span class="slot-reason">Livre para {{ $student->nome }}</span>
                                                 @endif
                                             </div>
                                         </td>

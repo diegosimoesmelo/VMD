@@ -105,6 +105,7 @@ Preencha principalmente:
 APP_URL=https://app.autoescolavmd.com.br
 APP_SITE_ADDRESS=app.autoescolavmd.com.br
 APP_DOMAIN=autoescolavmd.com.br
+APP_TIMEZONE=America/Recife
 DB_PASSWORD=senha_forte
 POSTGRES_PASSWORD=senha_forte
 SESSION_SECURE_COOKIE=true
@@ -172,6 +173,7 @@ ufw delete allow 5432/tcp
 cd /opt/vmd/app
 git pull
 docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
+docker compose --env-file .env.production -f docker-compose.prod.yml exec app php artisan config:clear
 docker compose --env-file .env.production -f docker-compose.prod.yml exec app php artisan migrate --force
 ```
 

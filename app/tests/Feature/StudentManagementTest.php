@@ -226,4 +226,84 @@ class StudentManagementTest extends TestCase
         $response->assertSee('Veiculo: QWE1R23');
         $response->assertSee('Observacoes: Aula de baliza');
     }
+
+    public function test_student_lessons_pdf_uses_document_row_numbers_and_category_totals(): void
+    {
+        $user = User::factory()->create();
+        $teacher = Teacher::query()->create([
+            'nome' => 'Professor PDF',
+            'cpf' => '321.321.321-12',
+            'telefone' => '(81) 98888-1234',
+            'categorias_ensino' => ['A', 'B'],
+            'turnos_disponiveis' => ['manha'],
+            'status_agendamento' => Teacher::STATUS_AVAILABLE,
+        ]);
+        $vehicleA = Vehicle::query()->create([
+            'placa' => 'ABC1A23',
+            'categoria' => 'A',
+        ]);
+        $vehicleB = Vehicle::query()->create([
+            'placa' => 'DEF4B56',
+            'categoria' => 'B',
+        ]);
+        $student = Student::query()->create([
+            'nome' => 'Aluno PDF',
+            'endereco' => 'Rua PDF',
+            'telefone' => '(81) 97777-4444',
+            'data_nascimento' => '2001-01-01',
+            'cpf' => '222.333.444-55',
+            'nome_mae' => 'Mae PDF',
+            'status' => Student::STATUS_PRACTICAL_CLASS,
+            'categoria_pretendida' => 'AB',
+        ]);
+
+        Appointment::query()->create([
+            'teacher_id' => $teacher->id,
+            'student_id' => null,
+            'vehicle_id' => $vehicleB->id,
+            'type' => Appointment::TYPE_UNAVAILABLE,
+            'starts_at' => '2026-03-25 07:00:00',
+            'ends_at' => '2026-03-25 07:50:00',
+        ]);
+        Appointment::query()->create([
+            'teacher_id' => $teacher->id,
+            'student_id' => null,
+            'vehicle_id' => $vehicleB->id,
+            'type' => Appointment::TYPE_UNAVAILABLE,
+            'starts_at' => '2026-03-25 08:00:00',
+            'ends_at' => '2026-03-25 08:50:00',
+        ]);
+        $lessonA = Appointment::query()->create([
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+            'vehicle_id' => $vehicleA->id,
+            'type' => Appointment::TYPE_LESSON,
+            'lesson_category' => 'A',
+            'starts_at' => '2026-03-26 08:00:00',
+            'ends_at' => '2026-03-26 08:50:00',
+        ]);
+        $lessonB = Appointment::query()->create([
+            'teacher_id' => $teacher->id,
+            'student_id' => $student->id,
+            'vehicle_id' => $vehicleB->id,
+            'type' => Appointment::TYPE_LESSON,
+            'lesson_category' => 'B',
+            'starts_at' => '2026-03-27 09:00:00',
+            'ends_at' => '2026-03-27 09:50:00',
+        ]);
+
+        $response = $this
+            ->actingAs($user)
+            ->get(route('students.lessons.pdf', [$student, 'category' => 'AB']));
+
+        $response->assertOk();
+        $pdf = $response->getContent();
+
+        $this->assertStringContainsString('(1) Tj', $pdf);
+        $this->assertStringContainsString('(2) Tj', $pdf);
+        $this->assertStringNotContainsString('('.$lessonA->id.') Tj', $pdf);
+        $this->assertStringNotContainsString('('.$lessonB->id.') Tj', $pdf);
+        $this->assertStringContainsString('(Categoria A: 1 aula) Tj', $pdf);
+        $this->assertStringContainsString('(Categoria B: 1 aula) Tj', $pdf);
+    }
 }

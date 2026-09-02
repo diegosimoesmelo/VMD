@@ -14,7 +14,8 @@ class StudentLessonsPdf
     public static function make(Student $student, Collection $appointments, string $category): string
     {
         $rows = $appointments->values();
-        $chunks = $rows->chunk(18);
+        $chunks = $rows->chunk(16);
+        $categoryTotals = self::categoryTotals($rows);
 
         if ($chunks->isEmpty()) {
             $chunks = collect([collect()]);
@@ -24,7 +25,7 @@ class StudentLessonsPdf
         $pageCount = $chunks->count();
 
         foreach ($chunks as $index => $chunk) {
-            $pages[] = self::page($student, $chunk, $category, $index + 1, $pageCount);
+            $pages[] = self::page($student, $chunk, $category, $index * 16, $index + 1, $pageCount, $categoryTotals);
         }
 
         return self::buildPdf($pages);
@@ -33,7 +34,7 @@ class StudentLessonsPdf
     /**
      * @param Collection<int, Appointment> $appointments
      */
-    private static function page(Student $student, Collection $appointments, string $category, int $page, int $pageCount): string
+    private static function page(Student $student, Collection $appointments, string $category, int $startNumber, int $page, int $pageCount, array $categoryTotals): string
     {
         $school = SchoolProfile::forStudent($student);
         $content = self::text((string) ($school['name'] ?? 'Autoescola'), 40, 555, 15, true)
@@ -65,12 +66,18 @@ class StudentLessonsPdf
 
         $y = 416;
         if ($appointments->isEmpty()) {
-            return $content.self::text('Nenhuma aula encontrada para a categoria selecionada.', 44, $y, 10);
+            $content .= self::text('Nenhuma aula encontrada para a categoria selecionada.', 44, $y, 10);
+
+            if ($page === $pageCount) {
+                $content .= self::totals($categoryTotals, 40, 42);
+            }
+
+            return $content;
         }
 
-        foreach ($appointments as $appointment) {
+        foreach ($appointments->values() as $rowIndex => $appointment) {
             $content .= self::box(40, $y - 8, 762, 22);
-            $content .= self::text((string) $appointment->getKey(), 44, $y, 8);
+            $content .= self::text((string) ($startNumber + $rowIndex + 1), 44, $y, 8);
             $content .= self::text($appointment->starts_at?->format('d/m/Y') ?: '-', 70, $y, 8);
             $content .= self::text(self::timeRange($appointment), 142, $y, 8);
             $content .= self::text($appointment->lesson_category ?: '-', 222, $y, 8);
@@ -79,6 +86,45 @@ class StudentLessonsPdf
             $content .= self::text(self::limit(self::lessonStatusLabel($appointment), 22), 538, $y, 8);
             $content .= self::text(self::limit($appointment->notes ?: $appointment->lesson_status_notes ?: '-', 25), 664, $y, 8);
             $y -= 22;
+        }
+
+        if ($page === $pageCount) {
+            $content .= self::totals($categoryTotals, 40, 42);
+        }
+
+        return $content;
+    }
+
+    /**
+     * @param Collection<int, Appointment> $appointments
+     * @return array<string, int>
+     */
+    private static function categoryTotals(Collection $appointments): array
+    {
+        return $appointments
+            ->groupBy('lesson_category')
+            ->only(['A', 'B'])
+            ->map(fn (Collection $categoryAppointments) => $categoryAppointments->count())
+            ->sortKeys()
+            ->all();
+    }
+
+    /**
+     * @param array<string, int> $categoryTotals
+     */
+    private static function totals(array $categoryTotals, int $x, int $y): string
+    {
+        $content = self::line($x, $y + 14, 802, $y + 14)
+            .self::text('Total de aulas por categoria', $x, $y, 10, true);
+
+        if ($categoryTotals === []) {
+            return $content.self::text('Nenhuma aula encontrada.', $x + 170, $y, 9);
+        }
+
+        $offset = 170;
+        foreach ($categoryTotals as $category => $total) {
+            $content .= self::text('Categoria '.$category.': '.$total.' aula'.($total === 1 ? '' : 's'), $x + $offset, $y, 9);
+            $offset += 130;
         }
 
         return $content;

@@ -72,11 +72,11 @@
             width: 100%;
             border-collapse: separate;
             border-spacing: 0;
-            min-width: 1380px;
+            min-width: 1220px;
         }
         .record-table th,
         .record-table td {
-            padding: 16px 18px;
+            padding: 10px 12px;
             text-align: left;
             border-bottom: 1px solid rgba(var(--color-secondary-rgb), 0.08);
             vertical-align: top;
@@ -122,6 +122,12 @@
         .status-badge {
             background: rgba(217, 119, 6, 0.12);
             color: #9a6700;
+            padding: 5px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            line-height: 1.15;
+            max-width: 118px;
+            white-space: normal;
         }
         .training-badge {
             margin-top: 8px;
@@ -130,8 +136,25 @@
         }
         .status-summary {
             display: grid;
-            gap: 10px;
-            min-width: 230px;
+            gap: 6px;
+            min-width: 0;
+            max-width: 128px;
+        }
+        .status-summary .modal-trigger {
+            justify-self: start;
+            padding: 4px 6px;
+            border-radius: 8px;
+            font-size: 11px;
+            line-height: 1.1;
+        }
+        .col-registration {
+            width: 74px;
+            max-width: 74px;
+            white-space: nowrap;
+        }
+        .col-status {
+            width: 138px;
+            max-width: 138px;
         }
         .status-timeline {
             display: grid;
@@ -176,8 +199,9 @@
         }
         .action-stack {
             display: flex;
-            gap: 10px;
+            gap: 5px;
             flex-wrap: wrap;
+            max-width: 270px;
         }
         .inline-form {
             margin: 0;
@@ -193,15 +217,25 @@
         .modal-trigger {
             width: auto;
             margin: 0;
-            padding: 10px 14px;
-            border-radius: 12px;
+            padding: 7px 9px;
+            border-radius: 9px;
             border: 1px solid rgba(var(--color-secondary-rgb), 0.1);
             background: rgba(255, 255, 255, 0.92);
             color: var(--color-secondary);
             font: inherit;
+            font-size: 12px;
             font-weight: 600;
             cursor: pointer;
             box-shadow: none;
+        }
+        .action-stack .btn,
+        .action-stack .btn-secondary,
+        .action-stack .modal-trigger {
+            padding: 7px 9px;
+            border-radius: 9px;
+            font-size: 12px;
+            line-height: 1.15;
+            min-height: 30px;
         }
         .timeline-modal {
             position: fixed;
@@ -730,10 +764,10 @@
                 <table class="record-table">
                     <thead>
                         <tr>
-                            <th>Matrícula</th>
+                            <th class="col-registration">Mat</th>
                             <th>Aluno</th>
                             <th>Professor</th>
-                            <th>Estado atual</th>
+                            <th class="col-status">Estado atual</th>
                             <th>CPF</th>
                             <th>Telefone</th>
                             <th>Categoria</th>
@@ -748,7 +782,7 @@
                                 $currentIndex = $currentIndex === false ? -1 : $currentIndex;
                             @endphp
                             <tr>
-                                <td>
+                                <td class="col-registration">
                                     <span class="record-title">{{ $student->matricula ?: '-' }}</span>
                                 </td>
                                 <td>
@@ -765,7 +799,7 @@
                                         <span class="teacher-badge empty">Sem professor</span>
                                     @endif
                                 </td>
-                                <td>
+                                <td class="col-status">
                                     <div class="status-summary">
                                         <span class="status-badge">{{ $student->statusLabel() }}</span>
                                         <button class="modal-trigger" type="button" data-modal-target="timeline-modal-{{ $student->id }}">

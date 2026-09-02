@@ -115,8 +115,9 @@ class StudentLessonsPdf
      */
     private static function totals(array $categoryTotals, int $x, int $y): string
     {
+        $totalLessons = array_sum($categoryTotals);
         $content = self::line($x, $y + 14, 802, $y + 14)
-            .self::text('Total de aulas por categoria', $x, $y, 10, true);
+            .self::text('Total de aulas: '.$totalLessons.'', $x, $y, 10, true);
 
         if ($categoryTotals === []) {
             return $content.self::text('Nenhuma aula encontrada.', $x + 170, $y, 9);

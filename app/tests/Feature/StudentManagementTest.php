@@ -303,6 +303,7 @@ class StudentManagementTest extends TestCase
         $this->assertStringContainsString('(2) Tj', $pdf);
         $this->assertStringNotContainsString('('.$lessonA->id.') Tj', $pdf);
         $this->assertStringNotContainsString('('.$lessonB->id.') Tj', $pdf);
+        $this->assertStringContainsString('(Total de aulas: 2 por categoria) Tj', $pdf);
         $this->assertStringContainsString('(Categoria A: 1 aula) Tj', $pdf);
         $this->assertStringContainsString('(Categoria B: 1 aula) Tj', $pdf);
     }
